@@ -2,13 +2,12 @@
 
 import { useForm, Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useProductStore } from "../stores/product.store";
 import { ProductFormSchema, ProductFormValues } from "../schemas/product.schema";
 import { FormInput } from "../../../components/FormInput";
 import { FormSelect } from "../../../components/FormSelect";
+import { FormTextarea } from "../../../components/FormTextarea";
 import { FormCancelButton, FormSubmitButton } from "../../../components/FormButtons";
 import { InfoIcon, ProductIcon, SettingsIcon } from "../../../components/Icons";
-import toast from "react-hot-toast";
 import { useProductCategories } from "../../product-categories/hooks/useProductCategories";
 import { useUnitsOfMeasure } from "../../units-of-measure/hooks/useUnitsOfMeasure";
 import { useTaxes } from "../../taxes/hooks/useTaxes";
@@ -17,20 +16,16 @@ import { useProductTypes } from "../../product-types/hooks/useProductTypes";
 import { useWorkspaceStore } from "../../workspace/store/workspace.store";
 import MissingPrerequisites from "./MissingPrerequisites";
 import { useSatProdServCodes } from "../../sat-prodserv-codes/hooks/useSatProdServCodes";
+import { useCreateProduct } from "../hooks/useCreateProduct";
+import { useUpdateProduct } from "../hooks/useUpdateProduct";
+import { Product } from "../interfaces/product.interface";
 
 interface ProductFormProps {
   onSuccess: () => void;
+  productToEdit?: Product | null;
 }
 
-export default function ProductForm({ onSuccess }: ProductFormProps) {
-
-  // Obtener funciones y estado del store de productos
-  const addProduct = useProductStore((state) => state.addProduct);
-  const updateProduct = useProductStore((state) => state.updateProduct);
-  const selectedProduct = useProductStore((state) => state.selectedProduct);
-  const isLoading = useProductStore((state) => state.isLoading);
-  const setIsLoading = useProductStore((state) => state.setIsLoading);
-
+export default function ProductForm({ onSuccess, productToEdit }: ProductFormProps) {
   // Obtener la empresa seleccionada del store de espacios de trabajo
   const selectedCompany = useWorkspaceStore((state) => state.selectedCompany);
 
@@ -65,44 +60,45 @@ export default function ProductForm({ onSuccess }: ProductFormProps) {
     activeSatUnitCodes.length === 0 && !isLoadingSatUnitCodes ? "Claves SAT Unidad" : null,
   ].filter((item): item is string => Boolean(item));
 
-  const isEditing = Boolean(selectedProduct?.id); // Comprobar si se está editando un producto existente
+  const isEditing = Boolean(productToEdit?.id); // Comprobar si se está editando un producto existente
   const emptyValues: ProductFormValues = { // Valores por defecto para el formulario
     nombre: "",
     descripcion: "",
-    tipo: 0,
-    categoria_producto_id: 0,
-    unidad_medida_id: 0,
-    impuesto_id: 0,
-    sat_prodserv_id: 0,
-    sat_unidad_id: 0,
+    tipo: "",
+    categoria_producto: 0,
+    unidad_medida: 0,
+    impuesto: 0,
+    sat_prodserv: 0,
+    sat_unidad: 0,
     activo: true,
   };
 
   // Comprobar si el producto seleccionado tiene categorías, tipos, unidades, impuestos, claves SAT Prod/Serv y claves SAT Unidad activos
   const hasCategory = activeCategories.some(
-    (category) => category.id === selectedProduct?.categoria_producto_id
+    (category) => category.id === productToEdit?.categoria_producto
   );
-  const hasType = productTypes.some((type) => type.id === selectedProduct?.tipo);
-  const hasUnit = activeUnits.some((unit) => unit.id === selectedProduct?.unidad_medida_id);
-  const hasTax = activeTaxes.some((tax) => tax.id === selectedProduct?.impuesto_id);
+  const productTypeCode = productToEdit?.tipo ?? "";
+  const hasType = productTypes.some((type) => type.codigo === productTypeCode);
+  const hasUnit = activeUnits.some((unit) => unit.id === productToEdit?.unidad_medida);
+  const hasTax = activeTaxes.some((tax) => tax.id === productToEdit?.impuesto);
   const hasSatProdserv = activeSatProdservCodes.some(
-    (code) => code.id_sat_prodserv === selectedProduct?.sat_prodserv_id
+    (code) => code.id_sat_prodserv === productToEdit?.sat_prodserv
   );
   const hasSatUnit = activeSatUnitCodes.some(
-    (code) => code.id_sat_unidad === selectedProduct?.sat_unidad_id
+    (code) => code.id_sat_unidad === productToEdit?.sat_unidad
   );
 
-  const editValues: ProductFormValues = selectedProduct // Valores para editar un producto existente
+  const editValues: ProductFormValues = productToEdit // Valores para editar un producto existente
     ? {
-        nombre: selectedProduct.nombre,
-        descripcion: selectedProduct.descripcion,
-        tipo: hasType ? selectedProduct.tipo : 0,
-        categoria_producto_id: hasCategory ? selectedProduct.categoria_producto_id : 0,
-        unidad_medida_id: hasUnit ? selectedProduct.unidad_medida_id : 0,
-        impuesto_id: hasTax ? selectedProduct.impuesto_id : 0,
-        sat_prodserv_id: hasSatProdserv ? selectedProduct.sat_prodserv_id : 0,
-        sat_unidad_id: hasSatUnit ? selectedProduct.sat_unidad_id : 0,
-        activo: selectedProduct.activo,
+        nombre: productToEdit.nombre,
+        descripcion: productToEdit.descripcion,
+        tipo: hasType ? productTypeCode : "",
+        categoria_producto: hasCategory ? productToEdit.categoria_producto : 0,
+        unidad_medida: hasUnit ? productToEdit.unidad_medida : 0,
+        impuesto: hasTax ? productToEdit.impuesto : 0,
+        sat_prodserv: hasSatProdserv ? productToEdit.sat_prodserv : 0,
+        sat_unidad: hasSatUnit ? productToEdit.sat_unidad : 0,
+        activo: productToEdit.activo,
       }
     : emptyValues;
 
@@ -112,6 +108,7 @@ export default function ProductForm({ onSuccess }: ProductFormProps) {
     handleSubmit,
     reset,
     watch,
+    setError,
     formState: { errors },
   } = useForm<ProductFormValues>({
     resolver: zodResolver(ProductFormSchema) as Resolver<ProductFormValues>,
@@ -120,46 +117,30 @@ export default function ProductForm({ onSuccess }: ProductFormProps) {
   });
 
   const isActive = watch("activo"); // Obtener el valor del campo activo del formulario
+  const { mutateAsync: createProduct, isPending: isCreating } = useCreateProduct(setError);
+  const { mutateAsync: updateProduct, isPending: isUpdating } = useUpdateProduct(setError);
+  const isPending = isCreating || isUpdating;
 
   // Manejar la submisión del formulario
   const onSubmit = async (data: ProductFormValues) => {
-    setIsLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500)); // Simular una demora en la submisión
-
-      const now = new Date().toISOString(); // Obtener la fecha y hora actual en formato ISO
-
-      if (selectedProduct) { // Actualizar un producto existente
-        updateProduct({
-          ...selectedProduct,
+      if (isEditing && productToEdit) { // Actualizar un producto existente
+        await updateProduct({
+          id: productToEdit.id,
+          empresa: productToEdit.empresa ?? selectedCompany.id!,
           ...data,
-          updated_at: now,
         });
-        toast.success("Producto actualizado correctamente");
+        reset(editValues);
       } else { // Registrar un nuevo producto
-        addProduct({
-          id: Date.now(),
-          empresa_id: selectedCompany.id!,
-          nombre: data.nombre,
-          descripcion: data.descripcion,
-          tipo: data.tipo,
-          categoria_producto_id: data.categoria_producto_id,
-          unidad_medida_id: data.unidad_medida_id,
-          impuesto_id: data.impuesto_id,
-          sat_prodserv_id: data.sat_prodserv_id,
-          sat_unidad_id: data.sat_unidad_id,
-          activo: data.activo,
-          created_at: now,
-          updated_at: now,
+        await createProduct({
+          empresa: selectedCompany.id!,
+          ...data,
         });
-        toast.success("Producto registrado correctamente");
+        reset(emptyValues);
       }
       onSuccess();
     } catch (error) {
       console.error(error);
-      toast.error("Ocurrió un error al guardar el producto");
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -170,7 +151,7 @@ export default function ProductForm({ onSuccess }: ProductFormProps) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="w-full">
-      <fieldset disabled={isLoading} className="group-disabled:opacity-50">
+      <fieldset disabled={isPending} className="group-disabled:opacity-50">
         <section className="mb-8">
           <div className="bg-slate-50 dark:bg-white/5 rounded-3xl p-8 border border-slate-100 dark:border-white/5">
             <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-6 flex items-center gap-2">
@@ -193,16 +174,16 @@ export default function ProductForm({ onSuccess }: ProductFormProps) {
               <div className="group/field">
                 <FormSelect
                   label="Tipo"
-                  {...register("tipo", { valueAsNumber: true })}
+                  {...register("tipo")}
                   error={errors.tipo}
                 >
-                  <option value="0" disabled>
+                  <option value="" disabled>
                     Seleccionar...
                   </option>
                   {productTypes.map((type) => (
                     <option
                       key={type.id}
-                      value={type.id}
+                      value={type.codigo}
                       className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white"
                     >
                       {type.codigo}
@@ -213,8 +194,8 @@ export default function ProductForm({ onSuccess }: ProductFormProps) {
 
               <FormSelect
                 label="Categoría"
-                {...register("categoria_producto_id", { valueAsNumber: true })}
-                error={errors.categoria_producto_id}
+                {...register("categoria_producto", { valueAsNumber: true })}
+                error={errors.categoria_producto}
               >
                 <option value="0" disabled>
                   Seleccionar...
@@ -230,19 +211,14 @@ export default function ProductForm({ onSuccess }: ProductFormProps) {
                 ))}
               </FormSelect>
 
-              <div className="group/field md:col-span-2">
-                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1 mb-1 block transition-colors group-focus-within:text-sky-500">
-                  Descripción
-                </label>
-                <textarea
+              <div className="md:col-span-2">
+                <FormTextarea
+                  label="Descripción"
                   rows={3}
                   placeholder="Describe el producto"
-                  className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all dark:text-white resize-none"
                   {...register("descripcion")}
+                  error={errors.descripcion}
                 />
-                {errors.descripcion && (
-                  <p className="text-xs text-red-600 mt-1">{errors.descripcion.message}</p>
-                )}
               </div>
             </div>
           </div>
@@ -259,8 +235,8 @@ export default function ProductForm({ onSuccess }: ProductFormProps) {
 
               <FormSelect
                 label="Unidad de Medida"
-                {...register("unidad_medida_id", { valueAsNumber: true })}
-                error={errors.unidad_medida_id}
+                {...register("unidad_medida", { valueAsNumber: true })}
+                error={errors.unidad_medida}
               >
                 <option value="0" disabled>
                   Seleccionar...
@@ -278,8 +254,8 @@ export default function ProductForm({ onSuccess }: ProductFormProps) {
 
               <FormSelect
                 label="Impuesto"
-                {...register("impuesto_id", { valueAsNumber: true })}
-                error={errors.impuesto_id}
+                {...register("impuesto", { valueAsNumber: true })}
+                error={errors.impuesto}
               >
                 <option value="0" disabled>
                   Seleccionar...
@@ -297,8 +273,8 @@ export default function ProductForm({ onSuccess }: ProductFormProps) {
 
               <FormSelect
                 label="SAT Prod/Serv"
-                {...register("sat_prodserv_id", { valueAsNumber: true })}
-                error={errors.sat_prodserv_id}
+                {...register("sat_prodserv", { valueAsNumber: true })}
+                error={errors.sat_prodserv}
               >
                 <option value="0" disabled>
                   Seleccionar...
@@ -316,8 +292,8 @@ export default function ProductForm({ onSuccess }: ProductFormProps) {
 
               <FormSelect
                 label="SAT Unidad"
-                {...register("sat_unidad_id", { valueAsNumber: true })}
-                error={errors.sat_unidad_id}
+                {...register("sat_unidad", { valueAsNumber: true })}
+                error={errors.sat_unidad}
               >
                 <option value="0" disabled>
                   Seleccionar...
@@ -356,7 +332,7 @@ export default function ProductForm({ onSuccess }: ProductFormProps) {
                   <input
                     type="checkbox"
                     className="w-4 h-4 text-sky-600 rounded border-slate-300 focus:ring-sky-500"
-                    {...register("activo")}
+                    {...register("activo", { setValueAs: (value) => Boolean(value) })}
                   />
                   <div>
                     <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
@@ -375,9 +351,9 @@ export default function ProductForm({ onSuccess }: ProductFormProps) {
         <div className="flex justify-end gap-3 pb-8 mt-8">
           <FormCancelButton
             onClick={() => reset(isEditing ? editValues : emptyValues)}
-            disabled={isLoading}
+            disabled={isPending}
           />
-          <FormSubmitButton isPending={isLoading} loadingLabel="Guardando...">
+          <FormSubmitButton isPending={isPending} loadingLabel={isEditing ? "Actualizando..." : "Guardando..."}>
             {isEditing ? "Actualizar Producto" : "Registrar Producto"}
           </FormSubmitButton>
         </div>

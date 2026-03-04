@@ -7,7 +7,7 @@ import { getColumns } from "./ProductVariantColumns";
 import { useSession } from "next-auth/react";
 import ProductVariantForm from "./ProductVariantForm";
 import { ProductVariant } from "../interfaces/product-variant.interface";
-import { useProductStore } from "../../products/stores/product.store";
+import { useProducts } from "../../products/hooks/useProducts";
 import { useColors } from "../../colors/hooks/useColors";
 import { useSizes } from "../../sizes/hooks/useSizes";
 
@@ -21,7 +21,7 @@ export default function ProductVariantList() {
 
   const { productVariants, selectedProductVariant, setSelectedProductVariant } =
     useProductVariantStore((state) => state);
-  const { products } = useProductStore((state) => state);
+  const { products } = useProducts();
   const { colors } = useColors();
   const { sizes } = useSizes();
 

@@ -3,7 +3,6 @@ import { DataTable } from "../../../components/DataTable";
 import { MainDialog } from "../../../components/MainDialog";
 import { DialogHeader } from "../../../components/DialogHeader";
 import { Product } from "../interfaces/product.interface";
-import { useProductStore } from "../stores/product.store";
 import { getColumns } from "./ProductColumns";
 import { useSession } from "next-auth/react";
 import ProductForm from "./ProductForm";
@@ -13,6 +12,8 @@ import { useTaxes } from "../../taxes/hooks/useTaxes";
 import { useSatUnitCodes } from "../../sat-unit-codes/hooks/useSatUnitCodes";
 import { useProductTypes } from "../../product-types/hooks/useProductTypes";
 import { useSatProdServCodes } from "../../sat-prodserv-codes/hooks/useSatProdServCodes";
+import { useProducts } from "../hooks/useProducts";
+import { ErrorState } from "../../../components/ErrorState";
 
 export default function ProductList() {
   const { data: session } = useSession();
@@ -21,8 +22,8 @@ export default function ProductList() {
   const canEditConfig = isAdmin || permissions.includes("E-CONF");
   const canDeleteConfig = isAdmin || permissions.includes("D-CONF");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  const { products, selectedProduct, setSelectedProduct } = useProductStore((state) => state);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const { products, isLoading, isError, error } = useProducts();
 
   const { categories } = useProductCategories();
   const { units } = useUnitsOfMeasure();
@@ -55,7 +56,7 @@ export default function ProductList() {
       satUnit: new Map(
         satUnitCodes.map((code) => [code.id_sat_unidad, `${code.codigo} - ${code.descripcion}`])
       ),
-      productTypes: new Map(productTypes.map((type) => [type.id, type.codigo])),
+      productTypes: new Map(productTypes.map((type) => [type.codigo, type.codigo])),
     }),
     [categories, units, taxes, satProdservCodes, satUnitCodes, productTypes]
   );
@@ -66,6 +67,19 @@ export default function ProductList() {
   );
 
   const isEditing = Boolean(selectedProduct?.id);
+
+  if (isLoading) {
+    return (
+      <div className="p-8 flex justify-center items-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-600"></div>
+        <span className="ml-3 text-slate-500">Cargando productos...</span>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return <ErrorState title="Error al cargar productos" message={(error as Error).message} />;
+  }
 
   return (
     <DataTable
@@ -95,7 +109,10 @@ export default function ProductList() {
               </button>
             }
           >
-            <ProductForm onSuccess={() => setIsDialogOpen(false)} />
+            <ProductForm
+              onSuccess={() => setIsDialogOpen(false)}
+              productToEdit={selectedProduct}
+            />
           </MainDialog>
         ) : null
       }

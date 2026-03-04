@@ -10,7 +10,7 @@ import { FormCancelButton, FormSubmitButton } from "../../../components/FormButt
 import { InfoIcon, ProductVariantsIcon, SettingsIcon } from "../../../components/Icons";
 import toast from "react-hot-toast";
 import { useWorkspaceStore } from "../../workspace/store/workspace.store";
-import { useProductStore } from "../../products/stores/product.store";
+import { useProducts } from "../../products/hooks/useProducts";
 import { useColors } from "../../colors/hooks/useColors";
 import { useSizes } from "../../sizes/hooks/useSizes";
 import MissingPrerequisites from "../../products/components/MissingPrerequisites";
@@ -32,7 +32,7 @@ export default function ProductVariantForm({ onSuccess }: ProductVariantFormProp
   const selectedCompany = useWorkspaceStore((state) => state.selectedCompany);
 
   // Stores de Products, Colors, y Sizes para obtener los datos necesarios
-  const { products } = useProductStore((state) => state);
+  const { products } = useProducts();
   const { colors } = useColors();
   const { sizes } = useSizes();
 

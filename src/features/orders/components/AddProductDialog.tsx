@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { MainDialog } from "@/src/components/MainDialog";
 import { OrderFormValues } from "../schema/order.schema";
-import { useProductStore } from "../../products/stores/product.store";
+import { useProducts } from "../../products/hooks/useProducts";
 import { useProductVariantStore } from "../../product-variants/stores/product-variant.store";
 import { useUnitsOfMeasure } from "../../units-of-measure/hooks/useUnitsOfMeasure";
 import { useColors } from "../../colors/hooks/useColors";
@@ -58,7 +58,7 @@ export function AddProductDialog({
   initialItem,
   startStep = "select",
 }: AddProductDialogProps) {
-  const products = useProductStore((s) => s.products);
+  const { products } = useProducts();
   const productVariants = useProductVariantStore((s) => s.productVariants);
   const { units } = useUnitsOfMeasure();
   const { colors } = useColors();
@@ -125,7 +125,7 @@ export function AddProductDialog({
       .map((variant) => {
         const product = productsById.get(variant.producto_id);
         if (!product) return null;
-        const unit = unitsById.get(product.unidad_medida_id);
+        const unit = unitsById.get(product.unidad_medida);
         const precio = Number(variant.precio_base);
         const color = colorsById.get(variant.color_id);
         return {

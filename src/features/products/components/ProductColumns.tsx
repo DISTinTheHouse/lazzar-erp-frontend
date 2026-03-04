@@ -1,9 +1,8 @@
 import { ColumnDef, createColumnHelper, Row } from "@tanstack/react-table";
 import { EditIcon, DeleteIcon } from "../../../components/Icons";
 import { Product } from "../interfaces/product.interface";
-import { useProductStore } from "../stores/product.store";
 import { ConfirmDialog } from "../../../components/ConfirmDialog";
-import toast from "react-hot-toast";
+import { useDeleteProduct } from "../hooks/useDeleteProduct";
 
 const columnHelper = createColumnHelper<Product>();
 
@@ -13,7 +12,7 @@ interface ProductLookups {
   taxes: Map<number, string>;
   satProdserv: Map<number, string>;
   satUnit: Map<number, string>;
-  productTypes: Map<number, string>;
+  productTypes: Map<string, string>;
 }
 
 const ActionsCell = ({
@@ -27,12 +26,7 @@ const ActionsCell = ({
   canEdit: boolean;
   canDelete: boolean;
 }) => {
-  const deleteProduct = useProductStore((state) => state.deleteProduct);
-
-  const handleDelete = () => {
-    deleteProduct(row.original.id);
-    toast.success("Producto eliminado correctamente");
-  };
+  const { mutate: deleteProduct, isPending } = useDeleteProduct();
 
   return (
     <div className="flex items-center justify-center gap-2">
@@ -49,12 +43,14 @@ const ActionsCell = ({
         <ConfirmDialog
           title="Eliminar Producto"
           description="¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer."
-          onConfirm={handleDelete}
+          confirmText={isPending ? "Eliminando..." : "Eliminar"}
+          onConfirm={() => deleteProduct(row.original.id)}
           confirmColor="red"
           trigger={
             <button
               className="p-1 cursor-pointer text-slate-400 hover:text-red-600 transition-colors"
               title="Eliminar"
+              disabled={isPending}
             >
               <DeleteIcon className="w-5 h-5" />
             </button>
@@ -71,10 +67,11 @@ export const getColumns = (
   lookups: ProductLookups
 ) => {
   const columns = [
-    columnHelper.accessor("activo", {
+    columnHelper.accessor((row) => (row.activo ? "Activo" : "Inactivo"), {
+      id: "activo",
       header: "Estado",
-      cell: (info) => {
-        const isActive = info.getValue();
+      cell: ({ row }) => {
+        const isActive = row.original.activo;
         const styles = isActive
           ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400"
           : "bg-slate-100 text-slate-600 dark:bg-slate-500/20 dark:text-slate-400";
@@ -104,62 +101,62 @@ export const getColumns = (
       }
     ),
     columnHelper.accessor(
-      (row) => lookups.categories.get(row.categoria_producto_id) ?? "",
+      (row) => lookups.categories.get(row.categoria_producto) ?? "",
       {
-        id: "categoria_producto_id",
+        id: "categoria_producto",
         header: "Categoría",
         cell: ({ row }) => (
           <span className="text-slate-500 dark:text-slate-400">
-            {lookups.categories.get(row.original.categoria_producto_id) ??
-              `#${row.original.categoria_producto_id}`}
+            {lookups.categories.get(row.original.categoria_producto) ??
+              `#${row.original.categoria_producto}`}
           </span>
         ),
       }
     ),
     columnHelper.accessor(
-      (row) => lookups.units.get(row.unidad_medida_id) ?? "",
+      (row) => lookups.units.get(row.unidad_medida) ?? "",
       {
-        id: "unidad_medida_id",
+        id: "unidad_medida",
         header: "Unidad",
         cell: ({ row }) => (
           <span className="text-slate-500 dark:text-slate-400">
-            {lookups.units.get(row.original.unidad_medida_id) ?? `#${row.original.unidad_medida_id}`}
+            {lookups.units.get(row.original.unidad_medida) ?? `#${row.original.unidad_medida}`}
           </span>
         ),
       }
     ),
     columnHelper.accessor(
-      (row) => lookups.taxes.get(row.impuesto_id) ?? "",
+      (row) => lookups.taxes.get(row.impuesto) ?? "",
       {
-        id: "impuesto_id",
+        id: "impuesto",
         header: "Impuesto",
         cell: ({ row }) => (
           <span className="text-slate-500 dark:text-slate-400">
-            {lookups.taxes.get(row.original.impuesto_id) ?? `#${row.original.impuesto_id}`}
+            {lookups.taxes.get(row.original.impuesto) ?? `#${row.original.impuesto}`}
           </span>
         ),
       }
     ),
     columnHelper.accessor(
-      (row) => lookups.satProdserv.get(row.sat_prodserv_id) ?? "",
+      (row) => lookups.satProdserv.get(row.sat_prodserv) ?? "",
       {
-        id: "sat_prodserv_id",
+        id: "sat_prodserv",
         header: "SAT Prod/Serv",
         cell: ({ row }) => (
           <span className="text-slate-500 dark:text-slate-400">
-            {lookups.satProdserv.get(row.original.sat_prodserv_id) ?? `#${row.original.sat_prodserv_id}`}
+            {lookups.satProdserv.get(row.original.sat_prodserv) ?? `#${row.original.sat_prodserv}`}
           </span>
         ),
       }
     ),
     columnHelper.accessor(
-      (row) => lookups.satUnit.get(row.sat_unidad_id) ?? "",
+      (row) => lookups.satUnit.get(row.sat_unidad) ?? "",
       {
-        id: "sat_unidad_id",
+        id: "sat_unidad",
         header: "SAT Unidad",
         cell: ({ row }) => (
           <span className="text-slate-500 dark:text-slate-400">
-            {lookups.satUnit.get(row.original.sat_unidad_id) ?? `#${row.original.sat_unidad_id}`}
+            {lookups.satUnit.get(row.original.sat_unidad) ?? `#${row.original.sat_unidad}`}
           </span>
         ),
       }

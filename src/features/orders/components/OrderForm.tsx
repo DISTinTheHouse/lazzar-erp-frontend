@@ -1298,17 +1298,26 @@ export default function OrderForm({ orderId }: OrderFormProps) {
         </div>
       </section>
 
-      <div className="flex justify-end gap-3 pb-8">
-        <FormCancelButton
-          onClick={() => reset(isEditing ? editValues : emptyValues)}
-          disabled={isPending}
-        />
-        <FormSubmitButton
-          isPending={isPending}
-          loadingLabel={isEditing ? "Actualizando..." : "Guardando..."}
+      <div className="flex items-center justify-between gap-3 pb-8">
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="px-4 py-2 rounded-xl cursor-pointer border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 text-xs font-bold uppercase tracking-wide hover:bg-slate-50 dark:hover:bg-white/10 transition-colors"
         >
-          {isEditing ? "Actualizar Pedido" : "Guardar Pedido"}
-        </FormSubmitButton>
+          Regresar
+        </button>
+        <div className="flex items-center gap-3">
+          <FormCancelButton
+            onClick={() => reset(isEditing ? editValues : emptyValues)}
+            disabled={isPending}
+          />
+          <FormSubmitButton
+            isPending={isPending}
+            loadingLabel={isEditing ? "Actualizando..." : "Guardando..."}
+          >
+            {isEditing ? "Actualizar Pedido" : "Guardar Pedido"}
+          </FormSubmitButton>
+        </div>
       </div>
     </form>
   );
