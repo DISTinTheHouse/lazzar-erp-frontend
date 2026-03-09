@@ -23,7 +23,7 @@ export const HomedGrid = () => {
         href="/system"
         accentClass="text-sky-600 dark:text-sky-400"
         accentBgClass="bg-sky-50 dark:bg-sky-500/10"
-        shadowColorClassName="dark:hover:shadow-sky-500/25"
+        shadowColorClassName="hover:shadow-sky-500/25 dark:hover:shadow-sky-500/25"
         className="cursor-pointer rounded-2xl bg-white dark:bg-black border border-slate-200 dark:border-white/10 p-8 h-full"
       />
 
@@ -36,7 +36,7 @@ export const HomedGrid = () => {
         href="/sales"
         accentClass="text-rose-600 dark:text-rose-400"
         accentBgClass="bg-rose-50 dark:bg-rose-500/10"
-        shadowColorClassName="dark:hover:shadow-rose-500/25"
+        shadowColorClassName="hover:shadow-rose-500/25 dark:hover:shadow-rose-500/25"
         className="cursor-pointer rounded-2xl bg-white dark:bg-black border border-slate-200 dark:border-white/10 p-8 h-full"
       />
 
@@ -49,7 +49,7 @@ export const HomedGrid = () => {
         href="/wms"
         accentClass="text-emerald-600 dark:text-emerald-400"
         accentBgClass="bg-emerald-50 dark:bg-emerald-500/10"
-        shadowColorClassName="dark:hover:shadow-emerald-500/25"
+        shadowColorClassName="hover:shadow-emerald-500/25 dark:hover:shadow-emerald-500/25"
         className="cursor-pointer rounded-2xl bg-white dark:bg-black border border-slate-200 dark:border-white/10 transition-all duration-300 p-8 h-full"
       />
 
@@ -62,7 +62,7 @@ export const HomedGrid = () => {
         href="/procurement"
         accentClass="text-amber-600 dark:text-amber-400"
         accentBgClass="bg-amber-50 dark:bg-amber-500/10"
-        shadowColorClassName="dark:hover:shadow-amber-500/25"
+        shadowColorClassName="hover:shadow-amber-500/25 dark:hover:shadow-amber-500/25"
         className="cursor-pointer rounded-2xl bg-white dark:bg-black border border-slate-200 dark:border-white/10 p-8 h-full"
       />
 
@@ -75,7 +75,7 @@ export const HomedGrid = () => {
         href="/manufacturing"
         accentClass="text-indigo-600 dark:text-indigo-400"
         accentBgClass="bg-indigo-50 dark:bg-indigo-500/10"
-        shadowColorClassName="dark:hover:shadow-indigo-500/25"
+        shadowColorClassName="hover:shadow-indigo-500/25 dark:hover:shadow-indigo-500/25"
         className="cursor-pointer rounded-2xl bg-white dark:bg-black border border-slate-200 dark:border-white/10 p-8 h-full"
       />
 
@@ -88,7 +88,7 @@ export const HomedGrid = () => {
         href="/finance"
         accentClass="text-emerald-600 dark:text-emerald-400"
         accentBgClass="bg-emerald-50 dark:bg-emerald-500/10"
-        shadowColorClassName="dark:hover:shadow-emerald-400/25"
+        shadowColorClassName="hover:shadow-emerald-500/25 dark:hover:shadow-emerald-500/25"
         className="cursor-pointer rounded-2xl bg-white dark:bg-black border border-slate-200 dark:border-white/10 p-8 h-full"
       />
 
@@ -101,7 +101,7 @@ export const HomedGrid = () => {
         href="/hr"
         accentClass="text-teal-600 dark:text-teal-400"
         accentBgClass="bg-teal-50 dark:bg-teal-500/10"
-        shadowColorClassName="dark:hover:shadow-teal-400/25"
+        shadowColorClassName="hover:shadow-teal-500/25 dark:hover:shadow-teal-500/25"
         className="cursor-pointer rounded-2xl bg-white dark:bg-black border border-slate-200 dark:border-white/10 p-8 h-full"
       />
 
@@ -114,7 +114,7 @@ export const HomedGrid = () => {
         href="/other"
         accentClass="text-fuchsia-600 dark:text-fuchsia-400"
         accentBgClass="bg-fuchsia-50 dark:bg-fuchsia-500/10"
-        shadowColorClassName="dark:hover:shadow-fuchsia-400/25"
+        shadowColorClassName="hover:shadow-fuchsia-500/25 dark:hover:shadow-fuchsia-500/25"
         className="cursor-pointer rounded-2xl bg-white dark:bg-black border border-slate-200 dark:border-white/10 p-8 h-full"
       />
     </div>
