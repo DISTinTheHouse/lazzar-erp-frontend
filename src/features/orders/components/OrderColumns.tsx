@@ -48,7 +48,7 @@ export const orderColumns: ColumnDef<Order>[] = [
   },
   {
     accessorKey: "clienteNombre",
-    header: "Razón Social",
+    header: "cliente",
     cell: ({ row }) => (
       <span className="text-slate-600 dark:text-slate-300">
         {row.getValue("clienteNombre")}
@@ -106,30 +106,21 @@ export const orderColumns: ColumnDef<Order>[] = [
       </div>
     ),
   },
-  {
-    accessorKey: "totals.ivaAmount",
-    header: "IVA",
-    cell: ({ row }) => (
-      <div className="text-right font-medium text-slate-700 dark:text-slate-200">
-        {formatCurrency(row.original.totals.ivaAmount)}
-      </div>
-    ),
-  },
+  // {
+  //   accessorKey: "totals.ivaAmount",
+  //   header: "IVA",
+  //   cell: ({ row }) => (
+  //     <div className="text-right font-medium text-slate-700 dark:text-slate-200">
+  //       {formatCurrency(row.original.totals.ivaAmount)}
+  //     </div>
+  //   ),
+  // },
   {
     accessorKey: "totals.granTotal",
     header: "Total",
     cell: ({ row }) => (
       <div className="text-right font-semibold text-slate-800 dark:text-slate-100">
         {formatCurrency(row.original.totals.granTotal)}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "totals.saldoPendiente",
-    header: "Saldo",
-    cell: ({ row }) => (
-      <div className="text-right text-slate-500 dark:text-slate-400">
-        {formatCurrency(row.original.totals.saldoPendiente)}
       </div>
     ),
   },

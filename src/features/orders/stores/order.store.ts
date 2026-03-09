@@ -55,7 +55,10 @@ export const useOrderStore = create<OrderState>()(
         onRehydrateStorage: () => (state) => {
           state?.setHasHydrated(true);
         },
-      }
-    )
+      },
+    ),
+    {
+      name: "order-storage",
+    }
   )
 );

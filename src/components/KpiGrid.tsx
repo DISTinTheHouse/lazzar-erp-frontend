@@ -27,7 +27,7 @@ const statusStyles: Record<KpiStatus, { text: string; bg: string }> = {
 
 export default function KpiGrid({ items }: KpiGridProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       {items.map((item) => {
         const status = item.status ?? "neutral";
         const badge = statusStyles[status];
@@ -59,9 +59,12 @@ export default function KpiGrid({ items }: KpiGridProps) {
               </div>
             </div>
             <div className="flex items-baseline gap-2 mb-2">
-              <h3 className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight font-mono">
+              <h3 className={`${item.value.length > 8 ? "text-2xl" : "text-3xl"} font-bold text-slate-800 dark:text-white tracking-tight font-mono`}>
                 {item.value}
               </h3>
+              {/* <h3 className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight font-mono">
+                {item.value}
+              </h3> */}
               {item.trendLabel ? (
                 <span
                   className={`flex items-center text-xs font-semibold ${badge.text} ${badge.bg} px-1.5 py-0.5 rounded`}
