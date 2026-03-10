@@ -1,3 +1,5 @@
+import { Company } from "../../companies/interfaces/company.interface";
+
 export interface Role {
   id: number;
   permisos_count: number;
@@ -6,9 +8,9 @@ export interface Role {
   descripcion: string;
   clave_departamento: string;
   is_system: boolean;
-  estatus: string;
+  estatus: string; // Ej. "activo"
   created_at: string;
   updated_at: string;
-  empresa: number;
+  empresa: Company["id"];
   permisos: [];
 }

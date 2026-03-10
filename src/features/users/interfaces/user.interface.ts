@@ -1,3 +1,7 @@
+import { Branch } from "../../branches/interfaces/branch.interface";
+import { Company } from "../../companies/interfaces/company.interface";
+import { Role } from "../../roles/interfaces/role.interface";
+
 export interface User {
   id: number;
   username: string;
@@ -6,22 +10,16 @@ export interface User {
   last_name: string;
   is_active: boolean;
   estatus: string;
-  empresa: number;
-  sucursal_default: number;
-  sucursales: number[];
+  empresa: Company["id"];
+  sucursal_default: Branch["id"];
+  sucursales: Branch["id"][];
   departamentos: number[];
   telefono: string;
   avatar_url: string | null;
   is_admin_empresa: boolean;
   date_joined: string;
   last_login: string | null;
-}
-
-export interface RegisterUserResponseErrors {
-  username?: string[];
-  email?: string[];
-  empresa?: string[];
-  sucursal_default?: string[];
+  roles_ids: Role["id"][];
 }
 
 export interface RegisterUser {
@@ -30,8 +28,16 @@ export interface RegisterUser {
   password: string;
   first_name: string;
   last_name: string;
-  sucursal_default: number;
-  sucursales: number[];
+  sucursal_default: Branch["id"];
+  sucursales: Branch["id"][];
   is_active: boolean;
-  empresa: number;
+  empresa: Company["id"];
+  roles: Role["id"][];
+}
+  
+export interface RegisterUserResponseErrors {
+  username?: string[];
+  email?: string[];
+  empresa?: string[];
+  sucursal_default?: string[];
 }

@@ -8,6 +8,7 @@ export const UserFormSchema = z.object({
   last_name: z.string().min(1, "El apellido es requerido"),
   sucursal_default: z.coerce.number().min(1, "La sucursal por defecto es requerida"),
   sucursales: z.array(z.coerce.number()).min(1, "Debe seleccionar al menos una sucursal"),
+  roles: z.array(z.coerce.number()).min(1, "Debe seleccionar al menos un rol"),
   is_active: z.boolean().default(true),
 });
 
