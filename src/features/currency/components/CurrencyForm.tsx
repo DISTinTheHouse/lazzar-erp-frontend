@@ -7,7 +7,7 @@ import { useCreateCurrency } from "../hooks/useCreateCurrency";
 import { useUpdateCurrency } from "../hooks/useUpdateCurrency";
 import { FormInput } from "../../../components/FormInput";
 import { FormCancelButton, FormSubmitButton } from "../../../components/FormButtons";
-import { SettingsIcon } from "../../../components/Icons";
+import { SettingsIcon, InfoIcon } from "../../../components/Icons";
 import { Currency } from "../interfaces/currency.interface";
 
 interface CurrencyFormProps {
@@ -65,15 +65,21 @@ export default function CurrencyForm({ onSuccess, currencyToEdit }: CurrencyForm
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <fieldset disabled={isPending} className={`space-y-8 transition-opacity duration-200 ${isPending ? "opacity-60" : ""}`}>
-        {/* 1. Encabezado e Información Principal */}
-        <section className="relative overflow-hidden bg-white dark:bg-zinc-900 rounded-3xl p-6 md:p-8 border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-none group hover:border-sky-200 dark:hover:border-sky-900 transition-colors duration-300">
-          {/* Elementos decorativos de fondo */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-sky-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-sky-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
+        <section className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-none overflow-hidden hover:shadow-lg transition-shadow duration-300">
+          <div className="px-8 py-5 border-b border-slate-100 dark:border-white/5 flex items-center gap-3 bg-slate-50/50 dark:bg-white/2">
+            <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-500/10 flex items-center justify-center text-sky-600 dark:text-sky-400 shadow-sm">
+              <InfoIcon className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-display font-semibold text-slate-900 dark:text-white text-lg">
+                Información General
+              </h3>
+              <p className="text-xs text-slate-500">Datos base de la moneda</p>
+            </div>
+          </div>
 
-          <div className="flex flex-col lg:flex-row gap-8 items-start relative z-10">
-            {/* Inputs Principales */}
-            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 w-full">
+          <div className="p-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 w-full">
               <div className="md:col-span-2 group/field">
                 <FormInput
                   label="Nombre de la Moneda"

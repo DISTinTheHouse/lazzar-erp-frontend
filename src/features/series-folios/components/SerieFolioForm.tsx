@@ -94,13 +94,20 @@ export default function SerieFolioForm({ onSuccess, serieFolioToEdit }: SerieFol
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="w-full">
       <fieldset disabled={isPending} className="group-disabled:opacity-50">
-        <section className="mb-8">
-          <div className="bg-slate-50 dark:bg-white/5 rounded-3xl p-8 border border-slate-100 dark:border-white/5">
-            <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-6 flex items-center gap-2">
-              <InfoIcon className="w-4 h-4" />
-              Información General
-            </h2>
+        <section className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-none overflow-hidden hover:shadow-lg transition-shadow duration-300 mb-8">
+          <div className="px-8 py-5 border-b border-slate-100 dark:border-white/5 flex items-center gap-3 bg-slate-50/50 dark:bg-white/2">
+            <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-500/10 flex items-center justify-center text-sky-600 dark:text-sky-400 shadow-sm">
+              <InfoIcon className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-display font-semibold text-slate-900 dark:text-white text-lg">
+                Información General
+              </h3>
+              <p className="text-xs text-slate-500">Datos base del documento y serie</p>
+            </div>
+          </div>
 
+          <div className="p-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="group/field md:col-span-2">
                 <FormInput
@@ -152,13 +159,20 @@ export default function SerieFolioForm({ onSuccess, serieFolioToEdit }: SerieFol
           </div>
         </section>
 
-        <section className="mb-8">
-          <div className="bg-slate-50 dark:bg-white/5 rounded-3xl p-8 border border-slate-100 dark:border-white/5">
-            <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-6 flex items-center gap-2">
-              <SettingsIcon className="w-4 h-4" />
-              Configuración de Folios
-            </h2>
+        <section className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-none overflow-hidden hover:shadow-lg transition-shadow duration-300 mb-8">
+          <div className="px-8 py-5 border-b border-slate-100 dark:border-white/5 flex items-center gap-3 bg-slate-50/50 dark:bg-white/2">
+            <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-500/10 flex items-center justify-center text-sky-600 dark:text-sky-400 shadow-sm">
+              <SettingsIcon className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-display font-semibold text-slate-900 dark:text-white text-lg">
+                Configuración de Folios
+              </h3>
+              <p className="text-xs text-slate-500">Rango y formato de numeración</p>
+            </div>
+          </div>
 
+          <div className="p-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <FormInput
                 label="Folio Inicial"

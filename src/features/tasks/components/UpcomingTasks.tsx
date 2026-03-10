@@ -10,6 +10,18 @@ import { useUpcomingTasksStore } from "../stores/upcoming-tasks.store";
 import { formatTaskTime } from "../utils/formatTaskTime";
 import { getTaskStyles } from "../utils/getTaskStyles";
 
+const EmptyUpcomingTasks = () => {
+  return (
+    <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-white/5 px-4 py-5 text-center">
+      <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
+        No hay tareas próximas por mostrar
+      </p>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+        Agrega una nueva tarea para verla aquí.
+      </p>
+    </div>
+  );
+};
 
 export const UpcomingTasks = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false); // Estado para controlar la apertura del diálogo
@@ -42,29 +54,33 @@ export const UpcomingTasks = () => {
         </button>
       </div>
 
-      <div className="relative pl-4 border-l border-slate-200 dark:border-slate-800 space-y-6">
-        {upcomingTasks.map(({ task, parsed }, index) => {
-          const styles = getTaskStyles(index);
-          return (
-            <div key={task.id} className="relative group">
-              <div
-                className={`absolute -left-5.25 top-1 w-2.5 h-2.5 rounded-full ring-4 ring-white dark:ring-black transition-colors ${styles.dotClassName}`}
-              />
-              <div className="flex flex-col">
-                <span className={`text-xs font-semibold mb-0.5 ${styles.accentClassName}`}>
-                  {formatTaskTime(parsed)}
-                </span>
-                <h4 className={`text-sm transition-colors cursor-pointer ${styles.titleClassName}`}>
-                  {task.title}
-                </h4>
-                {task.shortDescription ? (
-                  <p className="text-xs text-slate-500 mt-1">{task.shortDescription}</p>
-                ) : null}
+      {upcomingTasks.length === 0 ? (
+        <EmptyUpcomingTasks />
+      ) : (
+        <div className="relative pl-4 border-l border-slate-200 dark:border-slate-800 space-y-6">
+          {upcomingTasks.map(({ task, parsed }, index) => {
+            const styles = getTaskStyles(index);
+            return (
+              <div key={task.id} className="relative group">
+                <div
+                  className={`absolute -left-5.25 top-1 w-2.5 h-2.5 rounded-full ring-4 ring-white dark:ring-black transition-colors ${styles.dotClassName}`}
+                />
+                <div className="flex flex-col">
+                  <span className={`text-xs font-semibold mb-0.5 ${styles.accentClassName}`}>
+                    {formatTaskTime(parsed)}
+                  </span>
+                  <h4 className={`text-sm transition-colors cursor-pointer ${styles.titleClassName}`}>
+                    {task.title}
+                  </h4>
+                  {task.shortDescription ? (
+                    <p className="text-xs text-slate-500 mt-1">{task.shortDescription}</p>
+                  ) : null}
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       <button
         type="button"

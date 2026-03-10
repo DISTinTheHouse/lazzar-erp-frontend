@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { FormInput } from "../../../components/FormInput";
 import { FormTextarea } from "../../../components/FormTextarea";
 import { FormCancelButton, FormSubmitButton } from "../../../components/FormButtons";
+import { ClockIcon } from "../../../components/Icons";
 import { UpcomingTaskFormSchema, UpcomingTaskFormValues } from "../schemas/upcoming-task.schema";
 import { useUpcomingTasksStore } from "../stores/upcoming-tasks.store";
 import { UpcomingTask } from "../interfaces/upcoming-task.interface";
@@ -86,8 +87,19 @@ export default function UpcomingTaskForm({ onSuccess, taskToEdit }: UpcomingTask
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="w-full">
       <fieldset disabled={isPending} className="group-disabled:opacity-50">
-        <section className="mb-8">
-          <div className="bg-slate-50 dark:bg-white/5 rounded-3xl p-8 border border-slate-100 dark:border-white/5">
+        <section className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-none overflow-hidden hover:shadow-lg transition-shadow duration-300 mb-8">
+          <div className="px-8 py-5 border-b border-slate-100 dark:border-white/5 flex items-center gap-3 bg-slate-50/50 dark:bg-white/2">
+            <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-500/10 flex items-center justify-center text-sky-600 dark:text-sky-400 shadow-sm">
+              <ClockIcon className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-display font-semibold text-slate-900 dark:text-white text-lg">
+                Información de la tarea
+              </h3>
+              <p className="text-xs text-slate-500">Datos de seguimiento y programación</p>
+            </div>
+          </div>
+          <div className="p-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="group/field md:col-span-2">
                 <FormInput

@@ -46,13 +46,9 @@ export default function FiscalAddressForm({ onSuccess }: FiscalAddressFormProps)
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="space-y-8">
-        {/* Encabezado e Información Principal */}
-        <section className="relative overflow-hidden bg-white dark:bg-zinc-900 rounded-3xl p-6 md:p-8 border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-none">
-          {/* Elementos decorativos de fondo */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-sky-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-          
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-500/10 flex items-center justify-center text-sky-600 dark:text-sky-400">
+        <section className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-none overflow-hidden hover:shadow-lg transition-shadow duration-300">
+          <div className="px-8 py-5 border-b border-slate-100 dark:border-white/5 flex items-center gap-3 bg-slate-50/50 dark:bg-white/2">
+            <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-500/10 flex items-center justify-center text-sky-600 dark:text-sky-400 shadow-sm">
               <MapPinIcon className="w-5 h-5" />
             </div>
             <div>
@@ -63,7 +59,8 @@ export default function FiscalAddressForm({ onSuccess }: FiscalAddressFormProps)
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="p-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2">
               <FormInput
                 label="Calle"
@@ -101,11 +98,25 @@ export default function FiscalAddressForm({ onSuccess }: FiscalAddressFormProps)
               {...register("codigo_postal")}
               error={errors.codigo_postal}
             />
+            </div>
           </div>
         </section>
 
-        <section className="relative overflow-hidden bg-white dark:bg-zinc-900 rounded-3xl p-6 md:p-8 border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-none">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <section className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-none overflow-hidden hover:shadow-lg transition-shadow duration-300">
+          <div className="px-8 py-5 border-b border-slate-100 dark:border-white/5 flex items-center gap-3 bg-slate-50/50 dark:bg-white/2">
+            <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-500/10 flex items-center justify-center text-sky-600 dark:text-sky-400 shadow-sm">
+              <MapPinIcon className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-display font-semibold text-slate-900 dark:text-white text-lg">
+                Localidad y Región
+              </h3>
+              <p className="text-xs text-slate-500">Municipio, estado y país de operación</p>
+            </div>
+          </div>
+
+          <div className="p-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormInput
               label="Localidad"
               placeholder="Ej. Ciudad de México (Opcional)"
@@ -133,6 +144,7 @@ export default function FiscalAddressForm({ onSuccess }: FiscalAddressFormProps)
               {...register("pais")}
               error={errors.pais}
             />
+            </div>
           </div>
         </section>
 

@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
-import { format } from "date-fns";
 import { UpcomingTask } from "../interfaces/upcoming-task.interface";
 
 interface UpcomingTasksState {
@@ -12,22 +11,6 @@ interface UpcomingTasksState {
   setHasHydrated: (value: boolean) => void;
 }
 
-const toGmtMinusSixString = (date: Date) => {
-  const utc = date.getTime() + date.getTimezoneOffset() * 60000;
-  const gmtMinusSix = new Date(utc - 6 * 60 * 60000);
-  return `${format(gmtMinusSix, "yyyy-MM-dd'T'HH:mm:ss")}-06:00`;
-};
-
-const initialTasks: UpcomingTask[] = [
-  {
-    id: "task-1",
-    title: "Llamada con Cliente X",
-    shortDescription: "Revisión de requerimientos fase 2",
-    comments: "Confirmar disponibilidad de entregables.",
-    dueDate: toGmtMinusSixString(new Date(Date.now() + 2 * 60 * 60 * 1000)),
-  },
-];
-
 const createTaskId = () =>
   globalThis.crypto?.randomUUID
     ? globalThis.crypto.randomUUID()
@@ -37,7 +20,7 @@ export const useUpcomingTasksStore = create<UpcomingTasksState>()(
   devtools(
     persist(
       (set) => ({
-        tasks: initialTasks,
+        tasks: [],
         hasHydrated: false,
         addTask: (task) =>
           set((state) => ({
