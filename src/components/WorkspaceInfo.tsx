@@ -85,25 +85,26 @@ export const WorkspaceInfo = () => {
           </DropdownMenu.Trigger>
           
           <DropdownMenu.Content align="end" className="bg-white! dark:bg-zinc-900! dark:text-white!">
-            {availableBranches.length > 0 ? (
-              availableBranches.map((branch) => (
-                <DropdownMenu.Item 
-                  key={branch.id}
-                  disabled={branchSwitching}
-                  onClick={() => handleBranchSelect(branch)}
-                  className="flex items-center justify-between gap-3 min-w-30 cursor-pointer!"
-                >
-                  <span className={`text-xs ${selectedBranch?.id === branch.id ? "font-bold" : "font-medium"}`}>
-                    {branch.nombre}
-                  </span>
-                  {selectedBranch?.id === branch.id && (
-                    <CheckCircleIcon className="w-4 h-4 text-emerald-500" />
-                  )}
-                </DropdownMenu.Item>
-              ))
-            ) : (
+            {availableBranches.map((branch) => (
+              <DropdownMenu.Item 
+                key={branch.id}
+                disabled={branchSwitching}
+                onClick={() => handleBranchSelect(branch)}
+                className="flex items-center justify-between gap-3 min-w-30 cursor-pointer!"
+              >
+                <span className={`text-xs ${selectedBranch?.id === branch.id ? "font-bold" : "font-medium"}`}>
+                  {branch.nombre}
+                </span>
+                {selectedBranch?.id === branch.id && (
+                  <CheckCircleIcon className="w-4 h-4 text-emerald-500" />
+                )}
+              </DropdownMenu.Item>
+            ))}
+            {availableBranches.length === 0 && (
               <DropdownMenu.Item disabled className="text-xs">
-                No hay sucursales disponibles
+                <span className="text-xs font-medium text-slate-400">
+                  No hay sucursales disponibles
+                </span>
               </DropdownMenu.Item>
             )}
           </DropdownMenu.Content>
