@@ -61,7 +61,6 @@ export const ShipmentTrackingList = () => {
       <DataTable
         columns={shipmentTrackingColumns}
         data={SHIPMENT_DATA}
-        title="Rastreo de Guías"
         searchPlaceholder="Buscar por guía, transportista o ruta..."
       />
     </div>

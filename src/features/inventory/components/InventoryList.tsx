@@ -57,7 +57,6 @@ export const InventoryList = () => {
     <DataTable
       columns={inventoryColumns}
       data={MOCK_INVENTORY}
-      title="Inventario"
       searchPlaceholder="Buscar por SKU, producto..."
     />
   );

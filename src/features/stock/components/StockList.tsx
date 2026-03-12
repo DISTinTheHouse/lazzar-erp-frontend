@@ -31,7 +31,6 @@ export const StockList = () => {
       <DataTable
         columns={stockColumns}
         data={stockItems}
-        title="Existencias"
         searchPlaceholder="Buscar por producto, almacén o ubicación..."
         onRefetch={async () => {
           await refetch();

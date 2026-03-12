@@ -71,7 +71,6 @@ export const ShipmentList = () => {
       <DataTable
         columns={shipmentColumns}
         data={SHIPMENTS_DATA}
-        title="Embarques"
         searchPlaceholder="Buscar por pedido, cliente o factura..."
       />
     </div>
