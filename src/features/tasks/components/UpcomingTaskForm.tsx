@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm, Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FormInput } from "../../../components/FormInput";
@@ -16,20 +16,41 @@ import { toInputDateTime } from "@/src/utils/toInputDateTime";
 interface UpcomingTaskFormProps {
   onSuccess: () => void;
   taskToEdit?: UpcomingTask | null;
+  defaultCalendarDate?: Date | null;
+  dialogOpen?: boolean;
 }
 
 
-export default function UpcomingTaskForm({ onSuccess, taskToEdit }: UpcomingTaskFormProps) {
+const buildDefaultDueDate = (defaultCalendarDate: Date | null | undefined) => {
+  const now = new Date();
+  if (defaultCalendarDate) {
+    const calendarDateWithCurrentHour = new Date(defaultCalendarDate);
+    calendarDateWithCurrentHour.setHours(now.getHours(), now.getMinutes(), 0, 0);
+    return toInputDateTime(calendarDateWithCurrentHour.toISOString());
+  }
+  return toInputDateTime(now.toISOString());
+};
+
+export default function UpcomingTaskForm({
+  onSuccess,
+  taskToEdit,
+  defaultCalendarDate,
+  dialogOpen = false,
+}: UpcomingTaskFormProps) {
   const addTask = useUpcomingTasksStore((state) => state.addTask);
   const updateTask = useUpcomingTasksStore((state) => state.updateTask);
 
   const isEditing = Boolean(taskToEdit?.id);
-  const emptyValues: UpcomingTaskFormValues = { // Valores vacíos para el formulario
-    title: "",
-    shortDescription: "",
-    comments: "",
-    dueDate: "",
-  };
+  const currentDateTime = useMemo(() => buildDefaultDueDate(defaultCalendarDate), [defaultCalendarDate]);
+  const emptyValues: UpcomingTaskFormValues = useMemo(
+    () => ({
+      title: "",
+      shortDescription: "",
+      comments: "",
+      dueDate: currentDateTime,
+    }),
+    [currentDateTime]
+  );
 
   const editValues: UpcomingTaskFormValues = taskToEdit
     ? { // Valores para editar una tarea existente
@@ -50,6 +71,11 @@ export default function UpcomingTaskForm({ onSuccess, taskToEdit }: UpcomingTask
     defaultValues: emptyValues,
     values: isEditing ? editValues : undefined,
   });
+
+  useEffect(() => {
+    if (isEditing || !dialogOpen) return;
+    reset(emptyValues);
+  }, [dialogOpen, emptyValues, isEditing, reset]);
 
   // Manejo del estado de carga
   const [isLoading, setIsLoading] = useState(false);

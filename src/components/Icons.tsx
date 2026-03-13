@@ -1123,3 +1123,21 @@ export const HistoryIcon = (
     />
   </svg>
 );
+
+export const TasksIcon = (
+  props: React.SVGProps<SVGSVGElement>
+) => (
+  <svg
+    {...props}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+      d="M7 3v4M17 3v4M3 9h18M5 5h14a2 2 0 012 2v12H3V7a2 2 0 012-2zM9 15l2 2 4-4"
+    />
+  </svg>
+);

@@ -20,6 +20,7 @@ import {
   RecepcionesIcon,
   ReportesIcon,
   SettingsIcon,
+  TasksIcon,
 } from "../components/Icons";
 
 export interface AppRouteItem {
@@ -108,6 +109,13 @@ export const appRouteGroups: AppRouteGroup[] = [
         parentPath: "/sales/orders",
         showInSidebar: false,
       },
+      {
+        key: "sales-tasks",
+        label: "Tareas",
+        path: "/sales/tasks",
+        icon: TasksIcon,
+        permission: "R-PEDID",
+      }
     ],
   },
   {

@@ -1,7 +1,8 @@
 'use client'
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
-import { compareAsc, parseISO } from "date-fns";
+import { compareAsc, isSameDay, parseISO } from "date-fns";
 import { PlusIcon } from "../../../components/Icons";
 import { MainDialog } from "../../../components/MainDialog";
 import { DialogHeader } from "../../../components/DialogHeader";
@@ -23,32 +24,70 @@ const EmptyUpcomingTasks = () => {
   );
 };
 
-export const UpcomingTasks = () => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false); // Estado para controlar la apertura del diálogo
-  const tasks = useUpcomingTasksStore((state) => state.tasks); // Obtener las tareas del store
+type UpcomingTasksProps = {
+  onlyTodayPending?: boolean;
+  dialogOpen?: boolean;
+  onDialogOpenChange?: (open: boolean) => void;
+  defaultCalendarDate?: Date | null;
+};
 
-  // Filtrar y ordenar las tareas futuras
+export const UpcomingTasks = ({
+  onlyTodayPending = false,
+  dialogOpen,
+  onDialogOpenChange,
+  defaultCalendarDate = null,
+}: UpcomingTasksProps) => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const tasks = useUpcomingTasksStore((state) => state.tasks);
+  // Soporta modo controlado (desde el panel calendario) y no controlado (uso local).
+  const isExternallyControlled = typeof dialogOpen === "boolean";
+  const resolvedDialogOpen = isExternallyControlled ? dialogOpen : isDialogOpen;
+  const setDialogOpen = (open: boolean) => {
+    if (onDialogOpenChange) {
+      onDialogOpenChange(open);
+      return;
+    }
+    setIsDialogOpen(open);
+  };
+
   const upcomingTasks = useMemo(() => {
+    // La lista oculta tareas vencidas y ordena por fecha ascendente.
     const now = new Date();
-    return tasks
+    const filteredTasks = tasks
       .map((task) => {
         const parsed = parseISO(task.dueDate);
         return { task, parsed };
       })
-      .filter((item) => !Number.isNaN(item.parsed.getTime()) && item.parsed >= now)
-      .sort((a, b) => compareAsc(a.parsed, b.parsed))
-      .slice(0, 3);
-  }, [tasks]); // Recalcular cuando cambian las tareas
+      .filter((item) => {
+        if (Number.isNaN(item.parsed.getTime()) || item.parsed < now) {
+          return false;
+        }
+        if (!onlyTodayPending) {
+          return true;
+        }
+        return isSameDay(item.parsed, now);
+      })
+      .sort((a, b) => compareAsc(a.parsed, b.parsed));
+
+    // En modo lateral se muestran solo las primeras tareas para mantener el panel compacto.
+    if (onlyTodayPending) {
+      return filteredTasks;
+    }
+
+    return filteredTasks.slice(0, 3);
+  }, [onlyTodayPending, tasks]);
 
   return (
     <section className="bg-white dark:bg-black border border-slate-200 dark:border-white/10 rounded-xl shadow-sm p-6">
       <div className="flex justify-between items-center mb-6">
-        <h3 className="font-bold text-slate-800 dark:text-white text-sm">Próximas Tareas</h3>
+        <h3 className="font-bold text-slate-800 dark:text-white text-sm">
+          {onlyTodayPending ? "Tareas de hoy" : "Próximas Tareas"}
+        </h3>
         <button
           type="button"
           aria-label="Agregar tarea"
           className="p-1 cursor-pointer text-slate-400 hover:text-sky-500 transition-colors bg-slate-50 dark:bg-white/5 rounded-md"
-          onClick={() => setIsDialogOpen(true)}
+          onClick={() => setDialogOpen(true)}
         >
           <PlusIcon className="w-4 h-4" />
         </button>
@@ -82,17 +121,19 @@ export const UpcomingTasks = () => {
         </div>
       )}
 
-      <button
-        type="button"
-        aria-label="Ver calendario completo"
-        className="w-full cursor-pointer mt-6 py-2 text-xs font-medium text-slate-500 hover:text-sky-600 transition-colors border border-dashed border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-white/5"
-      >
-        Ver calendario completo
-      </button>
+      {!onlyTodayPending ? (
+        <Link
+          href="/sales/tasks"
+          aria-label="Ver calendario completo"
+          className="block w-full text-center cursor-pointer mt-6 py-2 text-xs font-medium text-slate-500 hover:text-sky-600 transition-colors border border-dashed border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-white/5"
+        >
+          Ver calendario completo
+        </Link>
+      ) : null}
 
       <MainDialog
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
+        open={resolvedDialogOpen}
+        onOpenChange={setDialogOpen}
         maxWidth="720px"
         title={
           <DialogHeader
@@ -102,7 +143,11 @@ export const UpcomingTasks = () => {
           />
         }
       >
-        <UpcomingTaskForm onSuccess={() => setIsDialogOpen(false)} />
+        <UpcomingTaskForm
+          onSuccess={() => setDialogOpen(false)}
+          defaultCalendarDate={defaultCalendarDate}
+          dialogOpen={resolvedDialogOpen}
+        />
       </MainDialog>
     </section>
   );
