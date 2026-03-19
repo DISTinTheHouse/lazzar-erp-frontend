@@ -3,14 +3,18 @@ import { updateProduct } from "../services/actions";
 import { ProductFormValues } from "../schemas/product.schema";
 import toast from "react-hot-toast";
 import { AxiosError } from "axios";
-import { UseFormSetError } from "react-hook-form";
 
 interface UpdateProductPayload extends ProductFormValues {
   id: number;
   empresa: number;
 }
 
-export const useUpdateProduct = (setError?: UseFormSetError<ProductFormValues>) => {
+type SetProductError = (
+  field: keyof ProductFormValues,
+  error: { type?: string; message?: string }
+) => void;
+
+export const useUpdateProduct = (setError?: SetProductError) => {
   const queryClient = useQueryClient();
 
   return useMutation({

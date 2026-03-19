@@ -67,7 +67,7 @@ export const getColumns = (
   lookups: ProductLookups
 ) => {
   const columns = [
-    columnHelper.accessor((row) => (row.activo ? "Activo" : "Inactivo"), {
+    columnHelper.accessor((row) => (row.activo), {
       id: "activo",
       header: "Estado",
       cell: ({ row }) => {

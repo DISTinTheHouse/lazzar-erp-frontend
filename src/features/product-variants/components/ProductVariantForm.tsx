@@ -1,21 +1,12 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { useForm, Resolver } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { ProductVariantFormSchema, ProductVariantFormValues } from "../schemas/product-variant.schema";
 import { FormInput } from "../../../components/FormInput";
 import { FormSelect } from "../../../components/FormSelect";
 import { FormCancelButton, FormSubmitButton } from "../../../components/FormButtons";
 import { InfoIcon, ProductVariantsIcon, SettingsIcon } from "../../../components/Icons";
-import { useWorkspaceStore } from "../../workspace/store/workspace.store";
-import { useProducts } from "../../products/hooks/useProducts";
-import { useColors } from "../../colors/hooks/useColors";
-import { useSizes } from "../../sizes/hooks/useSizes";
 import MissingPrerequisites from "../../products/components/MissingPrerequisites";
-import { useCreateProductVariant } from "../hooks/useCreateProductVariant";
-import { useUpdateProductVariant } from "../hooks/useUpdateProductVariant";
 import { ProductVariant } from "../interfaces/product-variant.interface";
+import { useProductVariantForm } from "../hooks/useProductVariantForm";
 
 interface ProductVariantFormProps {
   onSuccess: () => void;
@@ -26,124 +17,35 @@ export default function ProductVariantForm({
   onSuccess,
   productVariantToEdit,
 }: ProductVariantFormProps) {
-  // Store de Workspace para obtener la compañía seleccionada
-  const selectedCompany = useWorkspaceStore((state) => state.selectedCompany);
-
-  // Stores de Products, Colors, y Sizes para obtener los datos necesarios
-  const { products, isLoading: isLoadingProducts } = useProducts();
-  const { colors, isLoading: isLoadingColors } = useColors();
-  const { sizes, isLoading: isLoadingSizes } = useSizes();
-
-  // Filtrar productos, colores y tallas activos
-  const activeProducts = products.filter((product) => product.activo);
-  const activeColors = colors;
-  const activeSizes = sizes;
-
-  // Verificar si hay productos, colores y tallas activos
-  const missingItems = [
-    activeProducts.length === 0 && !isLoadingProducts ? "Productos" : null,
-    activeColors.length === 0 && !isLoadingColors ? "Colores" : null,
-    activeSizes.length === 0 && !isLoadingSizes ? "Tallas" : null,
-  ].filter((item): item is string => Boolean(item));
-
-  const isEditing = Boolean(productVariantToEdit?.id); // Verificar si hay una variante seleccionada para editar
-  const emptyValues: ProductVariantFormValues = { // Valores vacíos para el formulario
-    producto: 0,
-    color: 0,
-    talla: 0,
-    sku: "",
-    precio_base: "",
-    activo: true,
-  };
-
-  // Verificar si la variante seleccionada tiene un producto, color y talla activos
-  const hasProduct = activeProducts.some(
-    (product) => product.id === productVariantToEdit?.producto
-  );
-  const hasColor = activeColors.some((color) => color.id === productVariantToEdit?.color);
-  const hasSize = activeSizes.some((size) => size.id === productVariantToEdit?.talla);
-
-  // Preparar valores para editar si la variante tiene un producto, color y talla activos
-  const editValues: ProductVariantFormValues = productVariantToEdit
-    ? {
-        producto: hasProduct ? productVariantToEdit.producto : 0,
-        color: hasColor ? productVariantToEdit.color : 0,
-        talla: hasSize ? productVariantToEdit.talla : 0,
-        sku: productVariantToEdit.sku,
-        precio_base: productVariantToEdit.precio_base,
-        activo: productVariantToEdit.activo,
-      }
-    : emptyValues;
-
-  // Configurar el formulario con react-hook-form
   const {
-    register,
-    handleSubmit,
-    reset,
-    watch,
-    setError,
-    getValues,
-    formState: { errors },
-  } = useForm<ProductVariantFormValues>({
-    resolver: zodResolver(ProductVariantFormSchema) as Resolver<ProductVariantFormValues>,
-    defaultValues: emptyValues,
-    values: isEditing ? editValues : undefined,
+    form,
+    formRef,
+    formKey,
+    selectedCompany,
+    isEditing,
+    isPending,
+    keepCreating,
+    setKeepCreating,
+    missingItems,
+    activeProducts,
+    activeColors,
+    activeSizes,
+    getError,
+    clearFieldErrors,
+    validateField,
+    handleReset,
+    handleFormSubmit,
+  } = useProductVariantForm({
+    onSuccess,
+    productVariantToEdit,
   });
 
-  const formRef = useRef<HTMLFormElement | null>(null);
-  const [keepCreating, setKeepCreating] = useState(false);
-
-  // eslint-disable-next-line react-hooks/incompatible-library
-  const isActive = watch("activo"); // Observar el estado de activo en el formulario
-  const { mutateAsync: createProductVariant, isPending: isCreating } =
-    useCreateProductVariant(setError);
-  const { mutateAsync: updateProductVariant, isPending: isUpdating } =
-    useUpdateProductVariant(setError);
-  const isPending = isCreating || isUpdating;
-
-  // Manejar la submisión del formulario
-  const onSubmit = async (data: ProductVariantFormValues) => {
-    try {
-      if (isEditing && productVariantToEdit) { // Actualizar la variante si existe
-        await updateProductVariant({
-          id: productVariantToEdit.id,
-          empresa: productVariantToEdit.empresa ?? selectedCompany.id!,
-          ...data,
-        });
-        reset(editValues);
-        onSuccess();
-        return;
-      } else { // Registrar una nueva variante si no existe
-        await createProductVariant({
-          empresa: selectedCompany.id!,
-          ...data,
-        });
-        if (keepCreating) {
-          const currentValues = getValues();
-          reset({
-            ...currentValues,
-            sku: "",
-          });
-          setTimeout(() => {
-            formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-          }, 0);
-          return;
-        }
-        reset(emptyValues);
-      }
-      onSuccess();
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  // Mostrar un mensaje si faltan productos, colores o tallas activos
   if (missingItems.length > 0) {
     return <MissingPrerequisites items={missingItems} />;
   }
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit(onSubmit)} className="w-full">
+    <form ref={formRef} key={formKey} onSubmit={handleFormSubmit} className="w-full">
       <fieldset disabled={isPending} className="group-disabled:opacity-50">
         <section className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-none overflow-hidden hover:shadow-lg transition-shadow duration-300 mb-8">
           <div className="px-8 py-5 border-b border-slate-100 dark:border-white/5 flex items-center gap-3 bg-slate-50/50 dark:bg-white/2">
@@ -161,86 +63,154 @@ export default function ProductVariantForm({
           <div className="p-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="group/field md:col-span-2">
-                <FormInput
-                  label="SKU"
-                  placeholder="Ej. SKU-001"
-                  className="text-2xl font-bold"
-                  variant="ghost"
-                  {...register("sku")}
-                  error={errors.sku}
-                />
+                <form.Field name="sku">
+                  {(field) => (
+                    <FormInput
+                      label="SKU"
+                      placeholder="Ej. SKU-001"
+                      className="text-2xl font-bold"
+                      variant="ghost"
+                      name={field.name}
+                      value={field.state.value}
+                      onChange={(event) => {
+                        field.handleChange(event.target.value);
+                        clearFieldErrors("sku");
+                      }}
+                      onBlur={() => {
+                        field.handleBlur();
+                        validateField("sku", field.state.value);
+                      }}
+                      error={getError("sku")}
+                    />
+                  )}
+                </form.Field>
               </div>
 
               <div className="group/field">
-                <FormSelect
-                  label="Producto"
-                  {...register("producto", { valueAsNumber: true })}
-                  error={errors.producto}
-                >
-                  <option value="0" disabled>
-                    Seleccionar...
-                  </option>
-                  {activeProducts.map((product) => (
-                    <option
-                      key={product.id}
-                      value={product.id}
-                      className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white"
+                <form.Field name="producto">
+                  {(field) => (
+                    <FormSelect
+                      label="Producto"
+                      name={field.name}
+                      value={field.state.value}
+                      onChange={(event) => {
+                        const nextValue = Number(event.target.value);
+                        field.handleChange(Number.isNaN(nextValue) ? 0 : nextValue);
+                        clearFieldErrors("producto");
+                      }}
+                      onBlur={() => {
+                        field.handleBlur();
+                        validateField("producto", field.state.value);
+                      }}
+                      error={getError("producto")}
                     >
-                      {product.nombre}
-                    </option>
-                  ))}
-                </FormSelect>
+                      <option value="0" disabled>
+                        Seleccionar...
+                      </option>
+                      {activeProducts.map((product) => (
+                        <option
+                          key={product.id}
+                          value={product.id}
+                          className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white"
+                        >
+                          {product.nombre}
+                        </option>
+                      ))}
+                    </FormSelect>
+                  )}
+                </form.Field>
               </div>
 
               <div className="group/field">
-                <FormSelect
-                  label="Color"
-                  {...register("color", { valueAsNumber: true })}
-                  error={errors.color}
-                >
-                  <option value="0" disabled>
-                    Seleccionar...
-                  </option>
-                  {activeColors.map((color) => (
-                    <option
-                      key={color.id}
-                      value={color.id}
-                      className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white"
+                <form.Field name="color">
+                  {(field) => (
+                    <FormSelect
+                      label="Color"
+                      name={field.name}
+                      value={field.state.value}
+                      onChange={(event) => {
+                        const nextValue = Number(event.target.value);
+                        field.handleChange(Number.isNaN(nextValue) ? 0 : nextValue);
+                        clearFieldErrors("color");
+                      }}
+                      onBlur={() => {
+                        field.handleBlur();
+                        validateField("color", field.state.value);
+                      }}
+                      error={getError("color")}
                     >
-                      {color.nombre}
-                    </option>
-                  ))}
-                </FormSelect>
+                      <option value="0" disabled>
+                        Seleccionar...
+                      </option>
+                      {activeColors.map((color) => (
+                        <option
+                          key={color.id}
+                          value={color.id}
+                          className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white"
+                        >
+                          {color.nombre}
+                        </option>
+                      ))}
+                    </FormSelect>
+                  )}
+                </form.Field>
               </div>
 
               <div className="group/field">
-                <FormSelect
-                  label="Talla"
-                  {...register("talla", { valueAsNumber: true })}
-                  error={errors.talla}
-                >
-                  <option value="0" disabled>
-                    Seleccionar...
-                  </option>
-                  {activeSizes.map((size) => (
-                    <option
-                      key={size.id}
-                      value={size.id}
-                      className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white"
+                <form.Field name="talla">
+                  {(field) => (
+                    <FormSelect
+                      label="Talla"
+                      name={field.name}
+                      value={field.state.value}
+                      onChange={(event) => {
+                        const nextValue = Number(event.target.value);
+                        field.handleChange(Number.isNaN(nextValue) ? 0 : nextValue);
+                        clearFieldErrors("talla");
+                      }}
+                      onBlur={() => {
+                        field.handleBlur();
+                        validateField("talla", field.state.value);
+                      }}
+                      error={getError("talla")}
                     >
-                      {size.nombre}
-                    </option>
-                  ))}
-                </FormSelect>
+                      <option value="0" disabled>
+                        Seleccionar...
+                      </option>
+                      {activeSizes.map((size) => (
+                        <option
+                          key={size.id}
+                          value={size.id}
+                          className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white"
+                        >
+                          {size.nombre}
+                        </option>
+                      ))}
+                    </FormSelect>
+                  )}
+                </form.Field>
               </div>
 
               <div className="group/field">
-                <FormInput
-                  label="Precio Base"
-                  placeholder="0.00"
-                  {...register("precio_base")}
-                  error={errors.precio_base}
-                />
+                <form.Field name="precio_base">
+                  {(field) => (
+                    <FormInput
+                      label="Precio Base"
+                      placeholder="0.00"
+                      name={field.name}
+                      value={field.state.value}
+                      onChange={(event) => {
+                        field.handleChange(event.target.value);
+                        clearFieldErrors("precio_base");
+                      }}
+                      onBlur={() => {
+                        field.handleBlur();
+                        validateField("precio_base", field.state.value);
+                      }}
+                      error={getError("precio_base")}
+                    />
+                  )}
+                </form.Field>
               </div>
             </div>
           </div>
@@ -289,19 +259,35 @@ export default function ProductVariantForm({
 
               <div className="p-8 space-y-6">
                 <div className="flex items-center gap-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/5 px-4 py-3">
-                  <input
-                    type="checkbox"
-                    className="w-4 h-4 text-sky-600 rounded border-slate-300 focus:ring-sky-500"
-                    {...register("activo")}
-                  />
-                  <div>
-                    <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
-                      {isActive ? "Variante activa" : "Variante inactiva"}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {isActive ? "Disponible para selección" : "No disponible para selección"}
-                    </p>
-                  </div>
+                  <form.Field name="activo">
+                    {(field) => (
+                      <>
+                        <input
+                          type="checkbox"
+                          className="w-4 h-4 text-sky-600 rounded border-slate-300 focus:ring-sky-500"
+                          checked={field.state.value}
+                          onChange={(event) => {
+                            field.handleChange(event.target.checked);
+                            clearFieldErrors("activo");
+                          }}
+                          onBlur={() => {
+                            field.handleBlur();
+                            validateField("activo", field.state.value);
+                          }}
+                        />
+                        <div>
+                          <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                            {field.state.value ? "Variante activa" : "Variante inactiva"}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {field.state.value
+                              ? "Disponible para selección"
+                              : "No disponible para selección"}
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </form.Field>
                 </div>
               </div>
             </div>
@@ -321,10 +307,7 @@ export default function ProductVariantForm({
               Seguir registrando
             </label>
           ) : null}
-          <FormCancelButton
-            onClick={() => reset(isEditing ? editValues : emptyValues)}
-            disabled={isPending}
-          />
+          <FormCancelButton onClick={handleReset} disabled={isPending} />
           <FormSubmitButton isPending={isPending} loadingLabel="Guardando...">
             {isEditing ? "Actualizar Variante" : "Registrar Variante"}
           </FormSubmitButton>

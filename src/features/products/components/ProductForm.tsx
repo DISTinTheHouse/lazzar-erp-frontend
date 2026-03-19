@@ -1,25 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { useForm, Resolver } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { ProductFormSchema, ProductFormValues } from "../schemas/product.schema";
 import { FormInput } from "../../../components/FormInput";
 import { FormSelect } from "../../../components/FormSelect";
 import { FormTextarea } from "../../../components/FormTextarea";
 import { FormCancelButton, FormSubmitButton } from "../../../components/FormButtons";
 import { InfoIcon, ProductIcon, SettingsIcon } from "../../../components/Icons";
-import { useProductCategories } from "../../product-categories/hooks/useProductCategories";
-import { useUnitsOfMeasure } from "../../units-of-measure/hooks/useUnitsOfMeasure";
-import { useTaxes } from "../../taxes/hooks/useTaxes";
-import { useSatUnitCodes } from "../../sat-unit-codes/hooks/useSatUnitCodes";
-import { useProductTypes } from "../../product-types/hooks/useProductTypes";
-import { useWorkspaceStore } from "../../workspace/store/workspace.store";
 import MissingPrerequisites from "./MissingPrerequisites";
-import { useSatProdServCodes } from "../../sat-prodserv-codes/hooks/useSatProdServCodes";
-import { useCreateProduct } from "../hooks/useCreateProduct";
-import { useUpdateProduct } from "../hooks/useUpdateProduct";
 import { Product } from "../interfaces/product.interface";
+import { useProductForm } from "../hooks/useProductForm";
 
 interface ProductFormProps {
   onSuccess: () => void;
@@ -27,139 +15,37 @@ interface ProductFormProps {
 }
 
 export default function ProductForm({ onSuccess, productToEdit }: ProductFormProps) {
-  // Obtener la empresa seleccionada del store de espacios de trabajo
-  const selectedCompany = useWorkspaceStore((state) => state.selectedCompany);
-
-  // Obtener categorías, unidades, impuestos, claves SAT y tipos de producto de los stores correspondientes
-  const { categories, isLoading: isLoadingProductCategories } = useProductCategories();
-  const { units, isLoading: isLoadingUnits } = useUnitsOfMeasure();
-  const { taxes, isLoading: isLoadingTaxes } = useTaxes();
-  const { satProdservCodes, isLoading: isLoadingSatProdservCodes } = useSatProdServCodes();
-  const { satUnitCodes, isLoading: isLoadingSatUnitCodes } = useSatUnitCodes();
-  const { productTypes, isLoading: isLoadingProductTypes } = useProductTypes();
-
-  // Comprobar si faltan productos, colores, tallas, categorías, unidades, impuestos, claves SAT Prod/Serv, claves SAT Unidad o tipos de producto
-  const missingItems = [
-    categories.length === 0 && !isLoadingProductCategories ? "Categorías de producto" : null,
-    productTypes.length === 0 && !isLoadingProductTypes ? "Tipos de producto" : null,
-    units.length === 0 && !isLoadingUnits ? "Unidades de medida" : null,
-    taxes.length === 0 && !isLoadingTaxes ? "Impuestos" : null,
-    satProdservCodes.length === 0 && !isLoadingSatProdservCodes
-      ? "Claves SAT Prod/Serv"
-      : null,
-    satUnitCodes.length === 0 && !isLoadingSatUnitCodes ? "Claves SAT Unidad" : null,
-  ].filter((item): item is string => Boolean(item));
-
-  const isEditing = Boolean(productToEdit?.id); // Comprobar si se está editando un producto existente
-  const emptyValues: ProductFormValues = { // Valores por defecto para el formulario
-    nombre: "",
-    descripcion: "",
-    tipo: "",
-    categoria_producto: 0,
-    unidad_medida: 0,
-    impuesto: 0,
-    sat_prodserv: 0,
-    sat_unidad: 0,
-    activo: true,
-  };
-
-  // Comprobar si el producto seleccionado tiene categorías, tipos, unidades, impuestos, claves SAT Prod/Serv y claves SAT Unidad
-  const hasCategory = categories.some(
-    (category) => category.id === productToEdit?.categoria_producto
-  );
-  const productTypeCode = productToEdit?.tipo ?? "";
-  const hasType = productTypes.some((type) => type.codigo === productTypeCode);
-  const hasUnit = units.some((unit) => unit.id === productToEdit?.unidad_medida);
-  const hasTax = taxes.some((tax) => tax.id === productToEdit?.impuesto);
-  const hasSatProdserv = satProdservCodes.some(
-    (code) => code.id_sat_prodserv === productToEdit?.sat_prodserv
-  );
-  const hasSatUnit = satUnitCodes.some(
-    (code) => code.id_sat_unidad === productToEdit?.sat_unidad
-  );
-
-  const editValues: ProductFormValues = productToEdit // Valores para editar un producto existente
-    ? {
-        nombre: productToEdit.nombre,
-        descripcion: productToEdit.descripcion,
-        tipo: hasType ? productTypeCode : "",
-        categoria_producto: hasCategory ? productToEdit.categoria_producto : 0,
-        unidad_medida: hasUnit ? productToEdit.unidad_medida : 0,
-        impuesto: hasTax ? productToEdit.impuesto : 0,
-        sat_prodserv: hasSatProdserv ? productToEdit.sat_prodserv : 0,
-        sat_unidad: hasSatUnit ? productToEdit.sat_unidad : 0,
-        activo: productToEdit.activo,
-      }
-    : emptyValues;
-
-  // Configurar el formulario con valores por defecto y valores para editar si es necesario
   const {
-    register,
-    handleSubmit,
-    reset,
-    watch,
-    setError,
-    getValues,
-    formState: { errors },
-  } = useForm<ProductFormValues>({
-    resolver: zodResolver(ProductFormSchema) as Resolver<ProductFormValues>,
-    defaultValues: emptyValues,
-    values: isEditing ? editValues : undefined,
+    form,
+    formRef,
+    formKey,
+    isEditing,
+    isPending,
+    keepCreating,
+    setKeepCreating,
+    missingItems,
+    categories,
+    units,
+    taxes,
+    satProdservCodes,
+    satUnitCodes,
+    productTypes,
+    getError,
+    clearFieldErrors,
+    validateField,
+    handleReset,
+    handleFormSubmit,
+  } = useProductForm({
+    onSuccess,
+    productToEdit,
   });
 
-  const formRef = useRef<HTMLFormElement | null>(null);
-  const [keepCreating, setKeepCreating] = useState(false);
-
-  // eslint-disable-next-line react-hooks/incompatible-library
-  const isActive = watch("activo"); // Obtener el valor del campo activo del formulario
-  const { mutateAsync: createProduct, isPending: isCreating } = useCreateProduct(setError);
-  const { mutateAsync: updateProduct, isPending: isUpdating } = useUpdateProduct(setError);
-  const isPending = isCreating || isUpdating;
-
-  // Manejar la submisión del formulario
-  const onSubmit = async (data: ProductFormValues) => {
-    try {
-      if (isEditing && productToEdit) { // Actualizar un producto existente
-        await updateProduct({
-          id: productToEdit.id,
-          empresa: productToEdit.empresa ?? selectedCompany.id!,
-          ...data,
-        });
-        reset(editValues);
-        onSuccess();
-        return;
-      } else { // Registrar un nuevo producto
-        await createProduct({
-          empresa: selectedCompany.id!,
-          ...data,
-        });
-        if (keepCreating) {
-          const currentValues = getValues();
-          reset({
-            ...currentValues,
-            nombre: "",
-            descripcion: "",
-          });
-          setTimeout(() => {
-            formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-          }, 0);
-          return;
-        }
-        reset(emptyValues);
-      }
-      onSuccess();
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  // Comprobar si hay elementos faltantes en el formulario
   if (missingItems.length > 0) {
     return <MissingPrerequisites items={missingItems} />;
   }
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit(onSubmit)} className="w-full">
+    <form ref={formRef} key={formKey} onSubmit={handleFormSubmit} className="w-full">
       <fieldset disabled={isPending} className="group-disabled:opacity-50">
         <section className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-none overflow-hidden hover:shadow-lg transition-shadow duration-300 mb-8">
           <div className="px-8 py-5 border-b border-slate-100 dark:border-white/5 flex items-center gap-3 bg-slate-50/50 dark:bg-white/2">
@@ -177,64 +63,117 @@ export default function ProductForm({ onSuccess, productToEdit }: ProductFormPro
           <div className="p-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="group/field md:col-span-2">
-                <FormInput
-                  label="Nombre"
-                  placeholder="Ej. Playera básica"
-                  className="text-2xl font-bold"
-                  variant="ghost"
-                  {...register("nombre")}
-                  error={errors.nombre}
-                />
+                <form.Field name="nombre">
+                  {(field) => (
+                    <FormInput
+                      label="Nombre"
+                      placeholder="Ej. Playera básica"
+                      className="text-2xl font-bold"
+                      variant="ghost"
+                      name={field.name}
+                      value={field.state.value}
+                      onChange={(event) => {
+                        field.handleChange(event.target.value);
+                        clearFieldErrors("nombre");
+                      }}
+                      onBlur={() => {
+                        field.handleBlur();
+                        validateField("nombre", field.state.value);
+                      }}
+                      error={getError("nombre")}
+                    />
+                  )}
+                </form.Field>
               </div>
 
               <div className="group/field">
-                <FormSelect
-                  label="Tipo"
-                  {...register("tipo")}
-                  error={errors.tipo}
-                >
-                  <option value="" disabled>
-                    Seleccionar...
-                  </option>
-                  {productTypes.map((type) => (
-                    <option
-                      key={type.id}
-                      value={type.codigo}
-                      className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white"
+                <form.Field name="tipo">
+                  {(field) => (
+                    <FormSelect
+                      label="Tipo"
+                      name={field.name}
+                      value={field.state.value}
+                      onChange={(event) => {
+                        field.handleChange(event.target.value);
+                        clearFieldErrors("tipo");
+                      }}
+                      onBlur={() => {
+                        field.handleBlur();
+                        validateField("tipo", field.state.value);
+                      }}
+                      error={getError("tipo")}
                     >
-                      {type.codigo}
-                    </option>
-                  ))}
-                </FormSelect>
+                      <option value="" disabled>
+                        Seleccionar...
+                      </option>
+                      {productTypes.map((type) => (
+                        <option
+                          key={type.id}
+                          value={type.codigo}
+                          className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white"
+                        >
+                          {type.codigo}
+                        </option>
+                      ))}
+                    </FormSelect>
+                  )}
+                </form.Field>
               </div>
 
-              <FormSelect
-                label="Categoría"
-                {...register("categoria_producto", { valueAsNumber: true })}
-                error={errors.categoria_producto}
-              >
-                <option value="0" disabled>
-                  Seleccionar...
-                </option>
-                  {categories.map((category) => (
-                  <option
-                    key={category.id}
-                    value={category.id}
-                    className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white"
+              <form.Field name="categoria_producto">
+                {(field) => (
+                  <FormSelect
+                    label="Categoría"
+                    name={field.name}
+                    value={field.state.value}
+                    onChange={(event) => {
+                      const nextValue = Number(event.target.value);
+                      field.handleChange(Number.isNaN(nextValue) ? 0 : nextValue);
+                      clearFieldErrors("categoria_producto");
+                    }}
+                    onBlur={() => {
+                      field.handleBlur();
+                      validateField("categoria_producto", field.state.value);
+                    }}
+                    error={getError("categoria_producto")}
                   >
-                    {category.nombre}
-                  </option>
-                ))}
-              </FormSelect>
+                    <option value="0" disabled>
+                      Seleccionar...
+                    </option>
+                    {categories.map((category) => (
+                      <option
+                        key={category.id}
+                        value={category.id}
+                        className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white"
+                      >
+                        {category.nombre}
+                      </option>
+                    ))}
+                  </FormSelect>
+                )}
+              </form.Field>
 
               <div className="md:col-span-2">
-                <FormTextarea
-                  label="Descripción"
-                  rows={3}
-                  placeholder="Describe el producto"
-                  {...register("descripcion")}
-                  error={errors.descripcion}
-                />
+                <form.Field name="descripcion">
+                  {(field) => (
+                    <FormTextarea
+                      label="Descripción"
+                      rows={3}
+                      placeholder="Describe el producto"
+                      name={field.name}
+                      value={field.state.value}
+                      onChange={(event) => {
+                        field.handleChange(event.target.value);
+                        clearFieldErrors("descripcion");
+                      }}
+                      onBlur={() => {
+                        field.handleBlur();
+                        validateField("descripcion", field.state.value);
+                      }}
+                      error={getError("descripcion")}
+                    />
+                  )}
+                </form.Field>
               </div>
             </div>
           </div>
@@ -255,82 +194,137 @@ export default function ProductForm({ onSuccess, productToEdit }: ProductFormPro
 
           <div className="p-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-
-              <FormSelect
-                label="Unidad de Medida"
-                {...register("unidad_medida", { valueAsNumber: true })}
-                error={errors.unidad_medida}
-              >
-                <option value="0" disabled>
-                  Seleccionar...
-                </option>
-                  {units.map((unit) => (
-                  <option
-                    key={unit.id}
-                    value={unit.id}
-                    className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white"
+              <form.Field name="unidad_medida">
+                {(field) => (
+                  <FormSelect
+                    label="Unidad de Medida"
+                    name={field.name}
+                    value={field.state.value}
+                    onChange={(event) => {
+                      const nextValue = Number(event.target.value);
+                      field.handleChange(Number.isNaN(nextValue) ? 0 : nextValue);
+                      clearFieldErrors("unidad_medida");
+                    }}
+                    onBlur={() => {
+                      field.handleBlur();
+                      validateField("unidad_medida", field.state.value);
+                    }}
+                    error={getError("unidad_medida")}
                   >
-                    {unit.clave} - {unit.nombre}
-                  </option>
-                ))}
-              </FormSelect>
+                    <option value="0" disabled>
+                      Seleccionar...
+                    </option>
+                    {units.map((unit) => (
+                      <option
+                        key={unit.id}
+                        value={unit.id}
+                        className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white"
+                      >
+                        {unit.clave} - {unit.nombre}
+                      </option>
+                    ))}
+                  </FormSelect>
+                )}
+              </form.Field>
 
-              <FormSelect
-                label="Impuesto"
-                {...register("impuesto", { valueAsNumber: true })}
-                error={errors.impuesto}
-              >
-                <option value="0" disabled>
-                  Seleccionar...
-                </option>
-                  {taxes.map((tax) => (
-                  <option
-                    key={tax.id}
-                    value={tax.id}
-                    className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white"
+              <form.Field name="impuesto">
+                {(field) => (
+                  <FormSelect
+                    label="Impuesto"
+                    name={field.name}
+                    value={field.state.value}
+                    onChange={(event) => {
+                      const nextValue = Number(event.target.value);
+                      field.handleChange(Number.isNaN(nextValue) ? 0 : nextValue);
+                      clearFieldErrors("impuesto");
+                    }}
+                    onBlur={() => {
+                      field.handleBlur();
+                      validateField("impuesto", field.state.value);
+                    }}
+                    error={getError("impuesto")}
                   >
-                    {tax.nombre}
-                  </option>
-                ))}
-              </FormSelect>
+                    <option value="0" disabled>
+                      Seleccionar...
+                    </option>
+                    {taxes.map((tax) => (
+                      <option
+                        key={tax.id}
+                        value={tax.id}
+                        className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white"
+                      >
+                        {tax.nombre}
+                      </option>
+                    ))}
+                  </FormSelect>
+                )}
+              </form.Field>
 
-              <FormSelect
-                label="SAT Prod/Serv"
-                {...register("sat_prodserv", { valueAsNumber: true })}
-                error={errors.sat_prodserv}
-              >
-                <option value="0" disabled>
-                  Seleccionar...
-                </option>
-                  {satProdservCodes.map((code) => (
-                  <option
-                    key={code.id_sat_prodserv}
-                    value={code.id_sat_prodserv}
-                    className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white"
+              <form.Field name="sat_prodserv">
+                {(field) => (
+                  <FormSelect
+                    label="SAT Prod/Serv"
+                    name={field.name}
+                    value={field.state.value}
+                    onChange={(event) => {
+                      const nextValue = Number(event.target.value);
+                      field.handleChange(Number.isNaN(nextValue) ? 0 : nextValue);
+                      clearFieldErrors("sat_prodserv");
+                    }}
+                    onBlur={() => {
+                      field.handleBlur();
+                      validateField("sat_prodserv", field.state.value);
+                    }}
+                    error={getError("sat_prodserv")}
                   >
-                    {code.codigo} - {code.descripcion}
-                  </option>
-                ))}
-              </FormSelect>
+                    <option value="0" disabled>
+                      Seleccionar...
+                    </option>
+                    {satProdservCodes.map((code) => (
+                      <option
+                        key={code.id_sat_prodserv}
+                        value={code.id_sat_prodserv}
+                        className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white"
+                      >
+                        {code.codigo} - {code.descripcion}
+                      </option>
+                    ))}
+                  </FormSelect>
+                )}
+              </form.Field>
 
-              <FormSelect
-                label="SAT Unidad"
-                {...register("sat_unidad", { valueAsNumber: true })}
-                error={errors.sat_unidad}
-              >
-                <option value="0" disabled>
-                  Seleccionar...
-                </option>
-                  {satUnitCodes.map((code) => (
-                  <option
-                    key={code.id_sat_unidad}
-                    value={code.id_sat_unidad}
-                    className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white"
+              <form.Field name="sat_unidad">
+                {(field) => (
+                  <FormSelect
+                    label="SAT Unidad"
+                    name={field.name}
+                    value={field.state.value}
+                    onChange={(event) => {
+                      const nextValue = Number(event.target.value);
+                      field.handleChange(Number.isNaN(nextValue) ? 0 : nextValue);
+                      clearFieldErrors("sat_unidad");
+                    }}
+                    onBlur={() => {
+                      field.handleBlur();
+                      validateField("sat_unidad", field.state.value);
+                    }}
+                    error={getError("sat_unidad")}
                   >
-                    {code.codigo} - {code.descripcion}
-                  </option>
-                ))}
-              </FormSelect>
+                    <option value="0" disabled>
+                      Seleccionar...
+                    </option>
+                    {satUnitCodes.map((code) => (
+                      <option
+                        key={code.id_sat_unidad}
+                        value={code.id_sat_unidad}
+                        className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white"
+                      >
+                        {code.codigo} - {code.descripcion}
+                      </option>
+                    ))}
+                  </FormSelect>
+                )}
+              </form.Field>
             </div>
           </div>
         </section>
@@ -352,19 +346,33 @@ export default function ProductForm({ onSuccess, productToEdit }: ProductFormPro
 
               <div className="p-8 space-y-6">
                 <div className="flex items-center gap-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/5 px-4 py-3">
-                  <input
-                    type="checkbox"
-                    className="w-4 h-4 text-sky-600 rounded border-slate-300 focus:ring-sky-500"
-                    {...register("activo", { setValueAs: (value) => Boolean(value) })}
-                  />
-                  <div>
-                    <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
-                      {isActive ? "Producto activo" : "Producto inactivo"}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {isActive ? "Disponible para catálogos" : "No disponible para selección"}
-                    </p>
-                  </div>
+                  <form.Field name="activo">
+                    {(field) => (
+                      <>
+                        <input
+                          type="checkbox"
+                          className="w-4 h-4 text-sky-600 rounded border-slate-300 focus:ring-sky-500"
+                          checked={field.state.value}
+                          onChange={(event) => {
+                            field.handleChange(event.target.checked);
+                            clearFieldErrors("activo");
+                          }}
+                          onBlur={() => {
+                            field.handleBlur();
+                            validateField("activo", field.state.value);
+                          }}
+                        />
+                        <div>
+                          <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                            {field.state.value ? "Producto activo" : "Producto inactivo"}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {field.state.value ? "Disponible para catálogos" : "No disponible para selección"}
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </form.Field>
                 </div>
               </div>
             </div>
@@ -384,10 +392,7 @@ export default function ProductForm({ onSuccess, productToEdit }: ProductFormPro
               Seguir registrando
             </label>
           ) : null}
-          <FormCancelButton
-            onClick={() => reset(isEditing ? editValues : emptyValues)}
-            disabled={isPending}
-          />
+          <FormCancelButton onClick={handleReset} disabled={isPending} />
           <FormSubmitButton
             isPending={isPending}
             loadingLabel={isEditing ? "Actualizando..." : "Guardando..."}

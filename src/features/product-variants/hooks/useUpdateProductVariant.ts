@@ -4,14 +4,18 @@ import { ProductVariantCreate } from "../interfaces/product-variant.interface";
 import { ProductVariantFormValues } from "../schemas/product-variant.schema";
 import toast from "react-hot-toast";
 import { AxiosError } from "axios";
-import { UseFormSetError } from "react-hook-form";
 
 interface UpdateProductVariantPayload extends ProductVariantCreate {
   id: number;
 }
 
+type SetProductVariantError = (
+  field: keyof ProductVariantFormValues,
+  error: { type?: string; message?: string }
+) => void;
+
 export const useUpdateProductVariant = (
-  setError?: UseFormSetError<ProductVariantFormValues>
+  setError?: SetProductVariantError
 ) => {
   const queryClient = useQueryClient();
 
