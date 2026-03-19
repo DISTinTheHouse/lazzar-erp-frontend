@@ -5,7 +5,7 @@ const columnHelper = createColumnHelper<UnitOfMeasure>();
 
 export const getColumns = () => {
   const columns = [
-    columnHelper.accessor("estatus", {
+    columnHelper.accessor("activo", {
       header: "Estado",
       cell: (info) => {
         const isActive = info.getValue();

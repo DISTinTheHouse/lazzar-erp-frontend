@@ -4,5 +4,5 @@ export interface Tax {
   nombre: string;
   tasa: string;
   tipo: string;
-  estatus: boolean;
+  activo: boolean;
 }

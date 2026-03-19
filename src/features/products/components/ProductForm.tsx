@@ -38,27 +38,16 @@ export default function ProductForm({ onSuccess, productToEdit }: ProductFormPro
   const { satUnitCodes, isLoading: isLoadingSatUnitCodes } = useSatUnitCodes();
   const { productTypes, isLoading: isLoadingProductTypes } = useProductTypes();
 
-  // Filtrar categorías, unidades, impuestos, claves SAT y tipos de producto activos
-  const activeCategories = categories;
-  const activeUnits = units.filter((unit) => unit.estatus);
-  const activeTaxes = taxes.filter((tax) => tax.estatus);
-  const activeSatProdservCodes = satProdservCodes.filter(
-    (code) => (code.estatus || "").toLowerCase() === "activo"
-  );
-  const activeSatUnitCodes = satUnitCodes.filter(
-    (code) => (code.estatus || "").toLowerCase() === "activo"
-  );
-
-  // Comprobar si faltan productos, colores, tallas, categorías, unidades, impuestos, claves SAT Prod/Serv, claves SAT Unidad o tipos de producto activos
+  // Comprobar si faltan productos, colores, tallas, categorías, unidades, impuestos, claves SAT Prod/Serv, claves SAT Unidad o tipos de producto
   const missingItems = [
-    activeCategories.length === 0 && !isLoadingProductCategories ? "Categorías de producto" : null,
+    categories.length === 0 && !isLoadingProductCategories ? "Categorías de producto" : null,
     productTypes.length === 0 && !isLoadingProductTypes ? "Tipos de producto" : null,
-    activeUnits.length === 0 && !isLoadingUnits ? "Unidades de medida" : null,
-    activeTaxes.length === 0 && !isLoadingTaxes ? "Impuestos" : null,
-    activeSatProdservCodes.length === 0 && !isLoadingSatProdservCodes
+    units.length === 0 && !isLoadingUnits ? "Unidades de medida" : null,
+    taxes.length === 0 && !isLoadingTaxes ? "Impuestos" : null,
+    satProdservCodes.length === 0 && !isLoadingSatProdservCodes
       ? "Claves SAT Prod/Serv"
       : null,
-    activeSatUnitCodes.length === 0 && !isLoadingSatUnitCodes ? "Claves SAT Unidad" : null,
+    satUnitCodes.length === 0 && !isLoadingSatUnitCodes ? "Claves SAT Unidad" : null,
   ].filter((item): item is string => Boolean(item));
 
   const isEditing = Boolean(productToEdit?.id); // Comprobar si se está editando un producto existente
@@ -74,18 +63,18 @@ export default function ProductForm({ onSuccess, productToEdit }: ProductFormPro
     activo: true,
   };
 
-  // Comprobar si el producto seleccionado tiene categorías, tipos, unidades, impuestos, claves SAT Prod/Serv y claves SAT Unidad activos
-  const hasCategory = activeCategories.some(
+  // Comprobar si el producto seleccionado tiene categorías, tipos, unidades, impuestos, claves SAT Prod/Serv y claves SAT Unidad
+  const hasCategory = categories.some(
     (category) => category.id === productToEdit?.categoria_producto
   );
   const productTypeCode = productToEdit?.tipo ?? "";
   const hasType = productTypes.some((type) => type.codigo === productTypeCode);
-  const hasUnit = activeUnits.some((unit) => unit.id === productToEdit?.unidad_medida);
-  const hasTax = activeTaxes.some((tax) => tax.id === productToEdit?.impuesto);
-  const hasSatProdserv = activeSatProdservCodes.some(
+  const hasUnit = units.some((unit) => unit.id === productToEdit?.unidad_medida);
+  const hasTax = taxes.some((tax) => tax.id === productToEdit?.impuesto);
+  const hasSatProdserv = satProdservCodes.some(
     (code) => code.id_sat_prodserv === productToEdit?.sat_prodserv
   );
-  const hasSatUnit = activeSatUnitCodes.some(
+  const hasSatUnit = satUnitCodes.some(
     (code) => code.id_sat_unidad === productToEdit?.sat_unidad
   );
 
@@ -227,7 +216,7 @@ export default function ProductForm({ onSuccess, productToEdit }: ProductFormPro
                 <option value="0" disabled>
                   Seleccionar...
                 </option>
-                  {activeCategories.map((category) => (
+                  {categories.map((category) => (
                   <option
                     key={category.id}
                     value={category.id}
@@ -275,7 +264,7 @@ export default function ProductForm({ onSuccess, productToEdit }: ProductFormPro
                 <option value="0" disabled>
                   Seleccionar...
                 </option>
-                  {activeUnits.map((unit) => (
+                  {units.map((unit) => (
                   <option
                     key={unit.id}
                     value={unit.id}
@@ -294,7 +283,7 @@ export default function ProductForm({ onSuccess, productToEdit }: ProductFormPro
                 <option value="0" disabled>
                   Seleccionar...
                 </option>
-                  {activeTaxes.map((tax) => (
+                  {taxes.map((tax) => (
                   <option
                     key={tax.id}
                     value={tax.id}
@@ -313,7 +302,7 @@ export default function ProductForm({ onSuccess, productToEdit }: ProductFormPro
                 <option value="0" disabled>
                   Seleccionar...
                 </option>
-                  {activeSatProdservCodes.map((code) => (
+                  {satProdservCodes.map((code) => (
                   <option
                     key={code.id_sat_prodserv}
                     value={code.id_sat_prodserv}
@@ -332,7 +321,7 @@ export default function ProductForm({ onSuccess, productToEdit }: ProductFormPro
                 <option value="0" disabled>
                   Seleccionar...
                 </option>
-                  {activeSatUnitCodes.map((code) => (
+                  {satUnitCodes.map((code) => (
                   <option
                     key={code.id_sat_unidad}
                     value={code.id_sat_unidad}
