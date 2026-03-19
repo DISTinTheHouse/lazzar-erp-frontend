@@ -73,9 +73,9 @@ export default function SalesPage() {
           </div>
         </div>
         <div className="space-y-6">
-          <MonthlyGoal />
-          <UpcomingTasks />
           <QuickActions />
+          <UpcomingTasks />
+          <MonthlyGoal />
         </div>
       </div>
     </div>
