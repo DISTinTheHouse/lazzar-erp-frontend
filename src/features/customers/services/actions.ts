@@ -7,6 +7,11 @@ export const getCustomers = async (): Promise<Customer[]> => {
   return response.data;
 };
 
+export const getCustomer = async (id: number): Promise<Customer> => {
+  const response = await v1_api.get<Customer>(`/terceros/clientes/${id}/`);
+  return response.data;
+};
+
 export const createCustomer = async (customer: CustomerCreate): Promise<Customer> => {
   const response = await v1_api.post<Customer>("/terceros/clientes/", customer);
   return response.data;

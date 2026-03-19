@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import KpiGrid from "@/src/components/KpiGrid";
 import { Loader } from "@/src/components/Loader";
 import { CustomerViews } from "./CustomerViews";
-import { useCustomerDetail } from "../hooks/useCustomerDetail";
+import { useCustomer } from "../hooks/useCustomer";
+import { buildCustomerKpis } from "../utils/customer-detail";
 
 interface CustomerDetailContentProps {
   customerId: string;
@@ -13,14 +14,17 @@ interface CustomerDetailContentProps {
 
 export const CustomerDetailContent = ({ customerId }: CustomerDetailContentProps) => {
   const router = useRouter();
-  const { isLoading, selectedCustomer, items } = useCustomerDetail(customerId);
+  const { data: selectedCustomer, isLoading, isError } = useCustomer(customerId);
+  const items = useMemo(() => buildCustomerKpis(), []);
 
   useEffect(() => {
-    if (isLoading) return;
-    if (!selectedCustomer) {
+    if (isLoading) {
+      return;
+    }
+    if (isError || !selectedCustomer) {
       router.replace("/sales/customers");
     }
-  }, [isLoading, router, selectedCustomer]);
+  }, [isError, isLoading, router, selectedCustomer]);
 
   if (isLoading) {
     return <Loader title="Cargando cliente" message="Obteniendo detalle del cliente..." />;
