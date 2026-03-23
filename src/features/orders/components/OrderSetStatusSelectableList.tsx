@@ -5,8 +5,8 @@ interface OrderSetStatusSelectableListProps {
   hasOrders: boolean;
   hasResults: boolean;
   orders: Order[];
-  selectedIds: Set<string>;
-  onToggle: (orderId: string) => void;
+  selectedIds: Set<number>;
+  onToggle: (orderId: number) => void;
 }
 
 export function OrderSetStatusSelectableList({
@@ -19,7 +19,7 @@ export function OrderSetStatusSelectableList({
   if (!hasOrders) {
     return (
       <div className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-white/5 p-6 text-center text-sm text-slate-500 dark:text-slate-400">
-        No hay pedidos disponibles
+        No hay pedidos disponibles para actualizar Activo/Inactivo
       </div>
     );
   }
@@ -27,7 +27,7 @@ export function OrderSetStatusSelectableList({
   if (!hasResults) {
     return (
       <div className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-white/5 p-6 text-center text-sm text-slate-500 dark:text-slate-400">
-        Sin resultados
+        Sin resultados para el filtro actual
       </div>
     );
   }

@@ -3,13 +3,7 @@ import { Document, Page, Text, View, StyleSheet, pdf } from "@react-pdf/renderer
 import { Order } from "../interfaces/order.interface";
 import { formatCurrency } from "@/src/utils/formatCurrency";
 import { DataTableVisibleColumn } from "@/src/components/DataTable";
-
-const statusLabels: Record<Order["estatusPedido"], string> = {
-  Pendiente: "Pendiente",
-  Parcial: "Parcial",
-  Completo: "Completo",
-  Cancelado: "Cancelado",
-};
+import { getOrderStatusLabel } from "../utils/getStatusStyle";
 
 const styles = StyleSheet.create({
   page: {
@@ -109,14 +103,11 @@ const isRightAlignedColumn = (column: DataTableVisibleColumn<Order>) => {
 
 const formatValue = (value: unknown, column: DataTableVisibleColumn<Order>) => {
   if (value === null || value === undefined) return "";
-  if (column.accessorKey === "estatusPedido" || column.id === "estatusPedido") {
-    return statusLabels[value as Order["estatusPedido"]] ?? String(value);
+  if (column.accessorKey === "activo" || column.id === "activo") {
+    return getOrderStatusLabel(Boolean(value));
   }
-  if (column.accessorKey === "piezas" || column.id === "piezas") {
-    return typeof value === "number" ? value.toLocaleString("es-MX") : String(value);
-  }
-  if (isCurrencyColumn(column) && typeof value === "number") {
-    return formatCurrency(value);
+  if (isCurrencyColumn(column)) {
+    return formatCurrency(Number(value) || 0);
   }
   return String(value);
 };
@@ -158,10 +149,10 @@ const OrdersPdfDocument = ({
           </View>
 
           {orders.map((order, index) => (
-            <View key={`${order.folio}-${index}`} style={styles.row}>
+            <View key={`${order.id}-${index}`} style={styles.row}>
               {columns.map((column) => (
                 <Text
-                  key={`${order.folio}-${column.id}-${index}`}
+                  key={`${order.id}-${column.id}-${index}`}
                   style={getCellStyle(column)}
                 >
                   {formatValue(getColumnValue(order, column, index), column)}

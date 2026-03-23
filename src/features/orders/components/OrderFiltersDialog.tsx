@@ -5,7 +5,6 @@ import { MainDialog } from "@/src/components/MainDialog";
 import { FilterSaveToggleButton } from "@/src/components/FormButtons";
 import { FormInput } from "@/src/components/FormInput";
 import { FormSelect } from "@/src/components/FormSelect";
-import { Order } from "../interfaces/order.interface";
 import { orderFiltersDefault, OrderFiltersValue } from "../stores/order-filters.store";
 
 interface OrderFiltersDialogProps {
@@ -16,6 +15,7 @@ interface OrderFiltersDialogProps {
   onSave: (value: OrderFiltersValue) => void;
   onClearSaved: () => void;
   savedValue: OrderFiltersValue;
+  personaPagosOptions: { value: string; label: string }[];
 }
 
 export const OrderFiltersDialog = ({
@@ -26,6 +26,7 @@ export const OrderFiltersDialog = ({
   onSave,
   onClearSaved,
   savedValue,
+  personaPagosOptions,
 }: OrderFiltersDialogProps) => {
   const [localValue, setLocalValue] = useState<OrderFiltersValue>(value);
 
@@ -48,24 +49,22 @@ export const OrderFiltersDialog = ({
     onSave(localValue);
   };
 
-  const toggleStatus = (status: Order["estatusPedido"]) => {
+  const toggleActivo = (value: boolean) => {
     setLocalValue((prev) => {
-      const exists = prev.statuses.includes(status);
       return {
         ...prev,
-        statuses: exists ? prev.statuses.filter((item) => item !== status) : [...prev.statuses, status],
+        activo: prev.activo === value ? null : value,
       };
     });
   };
 
   const isFiltersEqual = (first: OrderFiltersValue, second: OrderFiltersValue) => {
-    if (first.agente !== second.agente) return false;
+    if (first.personaPagos !== second.personaPagos) return false;
     if (first.dateFrom !== second.dateFrom) return false;
     if (first.dateTo !== second.dateTo) return false;
     if (first.minAmount !== second.minAmount) return false;
     if (first.maxAmount !== second.maxAmount) return false;
-    if (first.statuses.length !== second.statuses.length) return false;
-    return first.statuses.every((status) => second.statuses.includes(status));
+    return first.activo === second.activo;
   };
 
   const isSavedValueEmpty = isFiltersEqual(savedValue, orderFiltersDefault);
@@ -78,7 +77,7 @@ export const OrderFiltersDialog = ({
       open={open}
       onOpenChange={handleOpenChange}
       maxWidth="720px"
-      description="Filtra por estado, vendedor, fecha de captura y monto total."
+      description="Filtra por estado, contacto de pago, fecha de captura y monto total."
       actionButtonClose={false}
       actionButton={
         <div className="flex items-center gap-3">
@@ -96,40 +95,43 @@ export const OrderFiltersDialog = ({
       <div className="space-y-6 mt-2">
         <div className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-white/5 p-4">
           <div className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">Estado</div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2" role="group" aria-label="Estados del pedido">
-            {(["Pendiente", "Parcial", "Completo", "Cancelado"] as Order["estatusPedido"][]).map((status) => {
-              const isActive = localValue.statuses.includes(status);
-              return (
-                <button
-                  key={status}
-                  type="button"
-                  onClick={() => toggleStatus(status)}
-                  className={`px-3 py-2 text-xs rounded-xl border cursor-pointer transition-colors ${
-                    isActive
-                      ? "bg-sky-100 dark:bg-sky-500/20 border-sky-300 dark:border-sky-500 text-sky-800 dark:text-sky-200"
-                      : "bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300"
-                  }`}
-                  aria-pressed={isActive}
-                  aria-label={`Estado ${status}`}
-                >
-                  {status}
-                </button>
-              );
-            })}
+          <div className="grid grid-cols-2 gap-2" role="group" aria-label="Estado activo del pedido">
+            <button
+              type="button"
+              onClick={() => toggleActivo(true)}
+              className={`px-3 py-2 text-xs rounded-xl border cursor-pointer transition-colors ${
+                localValue.activo === true
+                  ? "bg-sky-100 dark:bg-sky-500/20 border-sky-300 dark:border-sky-500 text-sky-800 dark:text-sky-200"
+                  : "bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300"
+              }`}
+              aria-pressed={localValue.activo === true}
+              aria-label="Filtrar por pedidos activos"
+            >
+              Activo
+            </button>
+            <button
+              type="button"
+              onClick={() => toggleActivo(false)}
+              className={`px-3 py-2 text-xs rounded-xl border cursor-pointer transition-colors ${
+                localValue.activo === false
+                  ? "bg-sky-100 dark:bg-sky-500/20 border-sky-300 dark:border-sky-500 text-sky-800 dark:text-sky-200"
+                  : "bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300"
+              }`}
+              aria-pressed={localValue.activo === false}
+              aria-label="Filtrar por pedidos inactivos"
+            >
+              Inactivo
+            </button>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-white/5 p-4">
             <FormSelect
-              label="Agente"
-              value={localValue.agente}
-              onChange={(event) => setLocalValue((prev) => ({ ...prev, agente: event.target.value }))}
-              options={[
-                { value: "", label: "Todos" },
-                { value: "1", label: "Vendedor 1" },
-                { value: "2", label: "Vendedor 2" },
-              ]}
+              label="Contacto de pago"
+              value={localValue.personaPagos}
+              onChange={(event) => setLocalValue((prev) => ({ ...prev, personaPagos: event.target.value }))}
+              options={personaPagosOptions}
             />
           </div>
 

@@ -1,12 +1,12 @@
 import { CheckCircleIcon } from "@/src/components/Icons";
 import { Order } from "../interfaces/order.interface";
-import { getStatusStyles } from "../utils/getStatusStyle";
+import { getOrderStatusLabel, getStatusStyles } from "../utils/getStatusStyle";
 import { formatCurrency } from "@/src/utils/formatCurrency";
 
 interface OrderSetStatusSelectableRowProps {
   order: Order;
   isSelected: boolean;
-  onToggle: (orderId: string) => void;
+  onToggle: (orderId: number) => void;
 }
 
 export function OrderSetStatusSelectableRow({
@@ -14,6 +14,11 @@ export function OrderSetStatusSelectableRow({
   isSelected,
   onToggle,
 }: OrderSetStatusSelectableRowProps) {
+  const createdAtDate = new Date(order.created_at);
+  const createdAtLabel = Number.isNaN(createdAtDate.getTime())
+    ? order.created_at
+    : createdAtDate.toLocaleDateString("es-MX");
+
   return (
     <button
       type="button"
@@ -24,7 +29,7 @@ export function OrderSetStatusSelectableRow({
           : "border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800"
       }`}
       role="listitem"
-      aria-label={`Seleccionar ${order.folio}`}
+      aria-label={`Seleccionar pedido ${order.id}`}
     >
       <div className="pt-0.5">
         <span
@@ -42,23 +47,23 @@ export function OrderSetStatusSelectableRow({
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">
-              {order.folio}
+              #{order.id}
             </p>
             <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-              {order.clienteNombre}
+              {order.persona_pagos}
             </p>
           </div>
           <span
             className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${getStatusStyles(
-              order.estatusPedido
+              order.activo
             )}`}
           >
-            {order.estatusPedido}
+            {getOrderStatusLabel(order.activo)}
           </span>
         </div>
         <div className="flex items-center justify-between text-[10px] text-slate-400 mt-1">
-          <span>{order.fecha}</span>
-          <span>{formatCurrency(order.totals.granTotal)}</span>
+          <span>{createdAtLabel}</span>
+          <span>{formatCurrency(Number(order.gran_total) || 0)}</span>
         </div>
       </div>
     </button>

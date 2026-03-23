@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { endOfDay, isValid, parseISO } from "date-fns";
 import { Order } from "../interfaces/order.interface";
 import {
   OrderFiltersValue,
@@ -7,20 +8,33 @@ import {
 
 const parseOrderDate = (value: string) => {
   if (!value) return null;
-  if (value.includes("/")) {
-    const [day, month, year] = value.split("/").map((part) => Number(part));
-    if (!day || !month || !year) return null;
-    const date = new Date(year, month - 1, day);
-    return Number.isNaN(date.getTime()) ? null : date;
+  const normalizedValue = value.trim();
+  if (!normalizedValue) return null;
+  const normalizedIsoValue = normalizedValue.includes(" ")
+    ? normalizedValue.replace(" ", "T")
+    : normalizedValue;
+  const normalizedMillisecondsValue = normalizedIsoValue.replace(
+    /\.(\d{3})\d+(?=(Z|[+-]\d{2}:\d{2}|[+-]\d{2})?$)/,
+    ".$1"
+  );
+  let normalizedTimezoneValue = normalizedMillisecondsValue;
+  if (
+    normalizedMillisecondsValue.includes("T") &&
+    /[+-]\d{2}$/.test(normalizedMillisecondsValue)
+  ) {
+    normalizedTimezoneValue = `${normalizedMillisecondsValue}:00`;
   }
-  if (value.includes("-")) {
-    const [year, month, day] = value.split("-").map((part) => Number(part));
-    if (!day || !month || !year) return null;
-    const date = new Date(year, month - 1, day);
-    return Number.isNaN(date.getTime()) ? null : date;
-  }
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
+  const parsedDate = parseISO(normalizedTimezoneValue);
+  if (isValid(parsedDate)) return parsedDate;
+  const fallbackDate = new Date(normalizedTimezoneValue);
+  if (isValid(fallbackDate)) return fallbackDate;
+  const normalizedOffsetValue = normalizedTimezoneValue.replace(
+    /([+-]\d{2})(\d{2})$/,
+    "$1:$2"
+  );
+  const fallbackOffsetDate = new Date(normalizedOffsetValue);
+  if (isValid(fallbackOffsetDate)) return fallbackOffsetDate;
+  return null;
 };
 
 export const useOrderFilters = (orders: Order[]) => {
@@ -33,16 +47,19 @@ export const useOrderFilters = (orders: Order[]) => {
 
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
-      if (appliedFilters.statuses.length > 0 && !appliedFilters.statuses.includes(order.estatusPedido)) {
+      if (appliedFilters.activo !== null && order.activo !== appliedFilters.activo) {
         return false;
       }
 
-      if (appliedFilters.agente && order.agente !== appliedFilters.agente) {
+      if (
+        appliedFilters.personaPagos &&
+        order.persona_pagos !== appliedFilters.personaPagos
+      ) {
         return false;
       }
 
       if (appliedFilters.dateFrom || appliedFilters.dateTo) {
-        const createdAt = parseOrderDate(order.fecha);
+        const createdAt = parseOrderDate(order.created_at ?? "");
         if (!createdAt) return false;
         if (appliedFilters.dateFrom) {
           const start = parseOrderDate(appliedFilters.dateFrom);
@@ -51,13 +68,12 @@ export const useOrderFilters = (orders: Order[]) => {
         if (appliedFilters.dateTo) {
           const end = parseOrderDate(appliedFilters.dateTo);
           if (!end) return false;
-          const endOfDay = new Date(end);
-          endOfDay.setHours(23, 59, 59, 999);
-          if (createdAt > endOfDay) return false;
+          const endDate = endOfDay(end);
+          if (createdAt > endDate) return false;
         }
       }
 
-      const amount = order.totals?.granTotal ?? 0;
+      const amount = Number(order.gran_total) || 0;
       if (appliedFilters.minAmount) {
         const minValue = Number(appliedFilters.minAmount);
         if (!Number.isNaN(minValue) && amount <= minValue) return false;
@@ -72,12 +88,28 @@ export const useOrderFilters = (orders: Order[]) => {
   }, [appliedFilters, orders]);
 
   const hasActiveFilters =
-    appliedFilters.statuses.length > 0 ||
-    appliedFilters.agente.length > 0 ||
+    appliedFilters.activo !== null ||
+    appliedFilters.personaPagos.length > 0 ||
     appliedFilters.dateFrom.length > 0 ||
     appliedFilters.dateTo.length > 0 ||
     appliedFilters.minAmount.length > 0 ||
     appliedFilters.maxAmount.length > 0;
+
+  const personaPagosOptions = useMemo(
+    () => [
+      { value: "", label: "Todos" },
+      ...Array.from(
+        new Set(
+          orders
+            .map((order) => order.persona_pagos)
+            .filter((value): value is string => Boolean(value))
+        )
+      )
+        .sort((left, right) => left.localeCompare(right))
+        .map((value) => ({ value, label: value })),
+    ],
+    [orders]
+  );
 
   const applyFilters = (value: OrderFiltersValue) => {
     setAppliedFilters(value);
@@ -96,5 +128,6 @@ export const useOrderFilters = (orders: Order[]) => {
     savedFilters,
     saveFilters,
     clearSavedFilters,
+    personaPagosOptions,
   };
 };

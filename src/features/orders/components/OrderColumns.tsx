@@ -3,7 +3,6 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { useState } from "react";
 import { Order } from "../interfaces/order.interface";
-import { getStatusStyles } from "../utils/getStatusStyle";
 import { ActionMenu, ActionMenuItem } from "@/src/components/ActionMenu";
 import { MainDialog } from "@/src/components/MainDialog";
 import { DialogHeader } from "@/src/components/DialogHeader";
@@ -16,18 +15,11 @@ import {
 } from "../../../components/Icons";
 import { formatCurrency } from "../../../utils/formatCurrency";
 
-const statusLabels: Record<Order["estatusPedido"], string> = {
-  Pendiente: "Pendiente",
-  Parcial: "Parcial",
-  Completo: "Completo",
-  Cancelado: "Cancelado",
-};
-
-const statusDialogColors: Record<Order["estatusPedido"], "sky" | "emerald" | "amber" | "rose"> = {
-  Pendiente: "amber",
-  Parcial: "sky",
-  Completo: "emerald",
-  Cancelado: "rose",
+const statusDialogColors: Record<number, "sky" | "emerald" | "amber" | "rose"> = {
+  1: "amber",
+  2: "sky",
+  3: "emerald",
+  4: "rose",
 };
 
 const ActionsCell = ({ order }: { order: Order }) => {
@@ -67,9 +59,9 @@ const ActionsCell = ({ order }: { order: Order }) => {
         maxWidth="1000px"
         title={
           <DialogHeader
-            title={`Detalles del pedido ${order.folio}`}
-            subtitle={order.clienteNombre}
-            statusColor={statusDialogColors[order.estatusPedido]}
+            title={`Detalles del pedido #${order.id}`}
+            subtitle={order.persona_pagos}
+            statusColor={statusDialogColors[order.estatus] ?? "sky"}
           />
         }
       >
@@ -81,105 +73,53 @@ const ActionsCell = ({ order }: { order: Order }) => {
 
 export const orderColumns: ColumnDef<Order>[] = [
   {
-    accessorKey: "estatusPedido",
+    accessorKey: "activo",
     header: "Estado",
     cell: ({ row }) => {
-      const status = row.getValue("estatusPedido") as Order["estatusPedido"];
+      const isActive = row.getValue("activo") as boolean;
+      const styles = isActive
+        ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400"
+        : "bg-slate-100 text-slate-600 dark:bg-slate-500/20 dark:text-slate-400";
       return (
-        <span
-          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusStyles(
-            status
-          )}`}
-        >
-          {statusLabels[status]}
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${styles}`}>
+          {isActive ? "Activo" : "Inactivo"}
         </span>
       );
     },
   },
   {
-    accessorKey: "folio",
-    header: "Folio",
-    cell: ({ row }) => (
-      <span className="font-medium text-slate-700 dark:text-slate-200">
-        {row.getValue("folio")}
-      </span>
-    ),
-  },
-  {
-    accessorKey: "clienteNombre",
-    header: "cliente",
+    accessorKey: "persona_pagos",
+    header: "Contacto",
     cell: ({ row }) => (
       <span className="text-slate-600 dark:text-slate-300">
-        {row.getValue("clienteNombre")}
+        {row.getValue("persona_pagos")}
       </span>
     ),
   },
   {
-    accessorKey: "agente",
-    header: "Agente",
+    accessorKey: "oc",
+    header: "OC",
     cell: ({ row }) => (
       <span className="text-slate-500 dark:text-slate-400">
-        {row.getValue("agente")}
+        {row.getValue("oc")}
       </span>
     ),
   },
   {
-    accessorKey: "fecha",
-    header: "Fecha",
+    accessorKey: "uso_cfdi",
+    header: "Uso CFDI",
     cell: ({ row }) => (
       <span className="text-slate-500 dark:text-slate-400">
-        {row.getValue("fecha")}
+        {row.getValue("uso_cfdi")}
       </span>
     ),
   },
   {
-    id: "piezas",
-    header: "Piezas",
-    cell: ({ row }) => {
-      const pieces = row.getValue("piezas") as number;
-      return (
-        <span className="text-slate-500 dark:text-slate-400">
-          {pieces.toLocaleString("es-MX")}
-        </span>
-      );
-    },
-    accessorFn: (row) =>
-      row.items.reduce((total, item) => total + item.cantidad, 0),
-    sortingFn: "basic",
-  },
-  {
-    accessorKey: "totals.subtotal",
-    header: "Subtotal",
-    cell: ({ row }) => (
-      <div className="text-right font-medium text-slate-700 dark:text-slate-200">
-        {formatCurrency(row.original.totals.subtotal)}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "totals.descuentoTotal",
-    header: "Descuento",
-    cell: ({ row }) => (
-      <div className="text-right font-medium text-rose-500">
-        -{formatCurrency(row.original.totals.descuentoTotal)}
-      </div>
-    ),
-  },
-  // {
-  //   accessorKey: "totals.ivaAmount",
-  //   header: "IVA",
-  //   cell: ({ row }) => (
-  //     <div className="text-right font-medium text-slate-700 dark:text-slate-200">
-  //       {formatCurrency(row.original.totals.ivaAmount)}
-  //     </div>
-  //   ),
-  // },
-  {
-    accessorKey: "totals.granTotal",
+    accessorKey: "gran_total",
     header: "Total",
     cell: ({ row }) => (
       <div className="text-right font-semibold text-slate-800 dark:text-slate-100">
-        {formatCurrency(row.original.totals.granTotal)}
+        {formatCurrency(Number(row.original.gran_total) || 0)}
       </div>
     ),
   },

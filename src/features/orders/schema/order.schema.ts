@@ -91,13 +91,13 @@ export const orderFormSchema = z.object({
   ciudadFiscal: z.string().min(1, "Requerido"),
   estadoFiscal: z.string().min(1, "Requerido"),
   giroEmpresa: z.string().min(1, "Requerido"),
-  personaPagos: z.string().min(1, "Requerido"),
-  correoFacturas: z.string().email("Correo inválido"),
-  telefonoPagos: z.string().min(1, "Requerido"),
-  ordenCompra: z.string().min(1, "Requerido"),
-  formaPago: z.enum(["01", "03", "04"], { message: "Requerido" }),
-  metodoPago: z.enum(["PUE", "PPD", "NA"], { message: "Requerido" }),
-  usoCfdi: z.string().min(1, "Requerido"),
+  persona_pagos: z.string().min(1, "Requerido"),
+  correo_facturas: z.string().email("Correo inválido"),
+  telefono_pagos: z.string().min(1, "Requerido"),
+  oc: z.string().min(1, "Requerido"),
+  forma_pago: z.enum(["01", "03", "04"], { message: "Requerido" }),
+  metodo_pago: z.enum(["PUE", "PPD", "NA"], { message: "Requerido" }),
+  uso_cfdi: z.string().min(1, "Requerido"),
   referenciarOcFactura: z.boolean(),
   condicionPago: z.enum(
     [
@@ -127,25 +127,26 @@ export const orderFormSchema = z.object({
   referenciasEnvio: z.string().optional(),
   enviarDomicilioFiscal: z.boolean(),
   embarcarConOtrosPedidos: z.boolean(),
-  empaqueEcologico: z.boolean(),
-  embarqueParcial: z.boolean(),
-  comentariosParcialidad: z.string().optional(),
+  empaque_ecologico: z.boolean(),
+  embarque_parcial: z.boolean(),
+  comentarios_parcialidad: z.string().optional(),
   servicioEnvioActivo: z.boolean(),
-  servicioEnvioMonto: z.coerce.number().min(0, "No puede ser negativo"),
+  envio: z.coerce.number().min(0, "No puede ser negativo"),
   programaBordadosActivo: z.boolean(),
-  programaBordadosMonto: z.coerce.number().min(0, "No puede ser negativo"),
+  programa_bordados: z.coerce.number().min(0, "No puede ser negativo"),
   bordadoPantalonesExtrasActivo: z.boolean(),
-  bordadoPantalonesExtrasMonto: z.coerce.number().min(0, "No puede ser negativo"),
-  bordadoLogotipoIncluido: z.boolean(),
+  bordado_pantalones_extras: z.coerce.number().min(0, "No puede ser negativo"),
+  bordado_logotipo: z.boolean(),
   estatusPedido: z.enum(["Pendiente", "Parcial", "Completo", "Cancelado"], {
     message: "Requerido",
   }),
-  docRelacionado: z.string().min(1, "Requerido"),
+  docRelacionado: z.string().optional(),
   observaciones: z.string().optional(),
   flete: z.coerce.number().min(0, "No puede ser negativo"),
-  seguro: z.coerce.number().min(0, "No puede ser negativo"),
+  seguros: z.coerce.number().min(0, "No puede ser negativo"),
   anticipo: z.coerce.number().min(0, "No puede ser negativo"),
-  iva: z.coerce.number().min(0, "No puede ser negativo"),
+  iva: z.coerce.number().int("Debe ser un número entero").min(0, "No puede ser negativo"),
+  moneda: z.coerce.number().int("Requerido").min(1, "Requerido"),
   items: z.array(orderItemSchema).min(1, "Agrega al menos un producto"),
 }).superRefine((data, ctx) => {
   if (data.condicionPago === "otra_cantidad" && data.condicionPagoMonto <= 0) {
@@ -155,10 +156,10 @@ export const orderFormSchema = z.object({
       message: "Especifica un monto válido",
     });
   }
-  if (data.embarqueParcial && !data.comentariosParcialidad?.trim()) {
+  if (data.embarque_parcial && !data.comentarios_parcialidad?.trim()) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      path: ["comentariosParcialidad"],
+      path: ["comentarios_parcialidad"],
       message: "Agrega los comentarios de parcialidad",
     });
   }

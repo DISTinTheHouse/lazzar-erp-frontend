@@ -4,13 +4,12 @@ import { useMemo } from "react";
 import KpiGrid, { KpiItem, KpiStatus } from "@/src/components/KpiGrid";
 import { LoadingSkeleton } from "@/src/components/LoadingSkeleton";
 import { CxcIcon, FacturacionIcon, OrdenesIcon, TrendingUpIcon } from "../../../components/Icons";
-import { useOrderStore } from "../stores/order.store";
 import { formatCurrency } from "@/src/utils/formatCurrency";
 import { getOrdersDashboardMetrics } from "../utils/orderMetrics";
+import { useOrders } from "../hooks/useOrders";
 
 export const OrderStats = () => {
-  const orders = useOrderStore((state) => state.orders);
-  const hasHydrated = useOrderStore((state) => state.hasHydrated);
+  const { orders, isLoading } = useOrders();
 
   const stats = useMemo(() => getOrdersDashboardMetrics(orders), [orders]);
 
@@ -66,7 +65,7 @@ export const OrderStats = () => {
     },
   ];
 
-  if (!hasHydrated) {
+  if (isLoading) {
     return (
       <div
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"

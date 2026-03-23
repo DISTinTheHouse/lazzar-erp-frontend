@@ -6,19 +6,18 @@ import { useSearchParams } from "next/navigation";
 import { DataTable, DataTableVisibleColumn } from "@/src/components/DataTable";
 import { orderColumns } from "./OrderColumns";
 import { OrderFiltersDialog } from "./OrderFiltersDialog";
-import { useOrderStore } from "../stores/order.store";
 import { useOrderCsvExport } from "../hooks/useOrderCsvExport";
 import { useOrderPdfExport } from "../hooks/useOrderPdfExport";
 import { Order } from "../interfaces/order.interface";
 import { useOrderFilters } from "../hooks/useOrderFilters";
 import { OrderFiltersValue, useOrderFiltersStore } from "../stores/order-filters.store";
 import { LoadingSkeleton } from "@/src/components/LoadingSkeleton";
+import { useOrders } from "../hooks/useOrders";
 
 export const OrderList = () => {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const searchParams = useSearchParams();
-  const { orders } = useOrderStore((state) => state);
-  const ordersHydrated = useOrderStore((state) => state.hasHydrated);
+  const { orders, isLoading: isOrdersLoading } = useOrders();
   const filtersHydrated = useOrderFiltersStore((state) => state.hasHydrated);
   const [visibleOrders, setVisibleOrders] = useState<Order[]>([]);
   const [visibleColumns, setVisibleColumns] = useState<DataTableVisibleColumn<Order>[]>([]);
@@ -31,6 +30,17 @@ export const OrderList = () => {
     today.setHours(0, 0, 0, 0);
     const parseOrderDate = (value: string) => {
       if (!value) return null;
+      const trimmedValue = value.trim();
+      const normalizedIsoValue = trimmedValue.includes(" ")
+        ? trimmedValue.replace(" ", "T")
+        : trimmedValue;
+      const normalizedTimezoneValue = /[+-]\d{2}$/.test(normalizedIsoValue)
+        ? `${normalizedIsoValue}:00`
+        : normalizedIsoValue;
+      const isoDate = new Date(normalizedTimezoneValue);
+      if (!Number.isNaN(isoDate.getTime())) {
+        return isoDate;
+      }
       if (value.includes("/")) {
         const [day, month, year] = value.split("/").map((part) => Number(part));
         if (!day || !month || !year) return null;
@@ -47,7 +57,7 @@ export const OrderList = () => {
       return Number.isNaN(date.getTime()) ? null : date;
     };
     return orders.filter((order) => {
-      const dueDate = parseOrderDate(order.fecha);
+      const dueDate = parseOrderDate(order.created_at ?? "");
       return dueDate ? dueDate < today : false;
     });
   }, [isOverdueActive, orders]);
@@ -60,6 +70,7 @@ export const OrderList = () => {
     savedFilters,
     saveFilters,
     clearSavedFilters,
+    personaPagosOptions,
   } = useOrderFilters(baseOrders);
 
   useOrderCsvExport(visibleOrders, visibleColumns);
@@ -72,7 +83,7 @@ export const OrderList = () => {
     clearFilters();
   };
 
-  if (!ordersHydrated || !filtersHydrated) {
+  if (isOrdersLoading || !filtersHydrated) {
     return (
       <div className="mt-12" role="status" aria-live="polite" aria-label="Cargando pedidos">
         <LoadingSkeleton className="h-96 rounded-3xl" />
@@ -112,6 +123,7 @@ export const OrderList = () => {
         onSave={saveFilters}
         onClearSaved={clearSavedFilters}
         savedValue={savedFilters}
+        personaPagosOptions={personaPagosOptions}
       />
     </div>
   );

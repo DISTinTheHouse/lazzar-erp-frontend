@@ -3,11 +3,10 @@
 
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
-import { Order } from "../interfaces/order.interface";
 
 export type OrderFiltersValue = {
-  statuses: Order["estatusPedido"][];
-  agente: string;
+  activo: boolean | null;
+  personaPagos: string;
   dateFrom: string;
   dateTo: string;
   minAmount: string;
@@ -15,13 +14,14 @@ export type OrderFiltersValue = {
 };
 
 export const orderFiltersDefault: OrderFiltersValue = {
-  statuses: [],
-  agente: "",
+  activo: null,
+  personaPagos: "",
   dateFrom: "",
   dateTo: "",
   minAmount: "",
   maxAmount: "",
 };
+
 
 interface OrderFiltersState {
   filters: OrderFiltersValue;

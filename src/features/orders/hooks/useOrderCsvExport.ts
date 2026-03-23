@@ -2,13 +2,7 @@ import { useCallback, useEffect } from "react";
 import { Order } from "../interfaces/order.interface";
 import { formatCurrency } from "@/src/utils/formatCurrency";
 import { DataTableVisibleColumn } from "@/src/components/DataTable";
-
-const statusLabels: Record<Order["estatusPedido"], string> = {
-  Pendiente: "Pendiente",
-  Parcial: "Parcial",
-  Completo: "Completo",
-  Cancelado: "Cancelado",
-};
+import { getOrderStatusLabel } from "../utils/getStatusStyle";
 
 const escapeCsv = (value: string | number | boolean | null | undefined) => {
   if (value === null || value === undefined) return "";
@@ -49,14 +43,11 @@ const isCurrencyColumn = (column: DataTableVisibleColumn<Order>) => {
 
 const formatValue = (value: unknown, column: DataTableVisibleColumn<Order>) => {
   if (value === null || value === undefined) return "";
-  if (column.accessorKey === "estatusPedido" || column.id === "estatusPedido") {
-    return statusLabels[value as Order["estatusPedido"]] ?? String(value);
+  if (column.accessorKey === "activo" || column.id === "activo") {
+    return getOrderStatusLabel(Boolean(value));
   }
-  if (column.accessorKey === "piezas" || column.id === "piezas") {
-    return typeof value === "number" ? value.toLocaleString("es-MX") : String(value);
-  }
-  if (isCurrencyColumn(column) && typeof value === "number") {
-    return formatCurrency(value);
+  if (isCurrencyColumn(column)) {
+    return formatCurrency(Number(value) || 0);
   }
   return String(value);
 };

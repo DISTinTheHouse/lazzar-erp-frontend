@@ -41,8 +41,10 @@ export default function OrderForm({ orderId }: OrderFormProps) {
     ivaOptions,
     regimenFiscalOptions,
     usoCfdiOptions,
+    currencyOptions,
     isCustomersLoading,
     isSatInfoLoading,
+    isCurrenciesLoading,
     showForm,
     handleFormSubmit,
     handleReset,
@@ -77,24 +79,18 @@ export default function OrderForm({ orderId }: OrderFormProps) {
     handleCustomerCreated,
     orderToEdit,
   } = useOrderForm({ orderId });
+  const extraServiceCheckboxClass =
+    "h-4 w-4 shrink-0 rounded border-slate-300 text-sky-600 focus:ring-sky-500";
 
-  if (isCustomersLoading || isSatInfoLoading) {
+  // Estado de carga del formulario
+  const isFormLoading = isCustomersLoading || isSatInfoLoading || isCurrenciesLoading || !showForm;
+  if (isFormLoading) {
     return (
       <div className="w-full pt-2">
-        <Loader title="Cargando formulario" message="Obteniendo clientes y catálogos..." />
-      </div>
-    );
-  }
-
-  if (!showForm) {
-    return (
-      <div className="w-full pt-2" role="status" aria-live="polite">
-        <div className="rounded-3xl border border-slate-200 dark:border-white/5 bg-white dark:bg-zinc-900 p-10 text-center">
-          <Loader aria-hidden="true" />
-          <p className="text-sm mt-2 text-slate-500 dark:text-slate-400">
-            Cargando cotización...
-          </p>
-        </div>
+        <Loader
+          title="Cargando formulario"
+          message={showForm ? "Obteniendo clientes y catálogos..." : "Obteniendo pedido..."}
+        />
       </div>
     );
   }
@@ -480,7 +476,7 @@ export default function OrderForm({ orderId }: OrderFormProps) {
               Forma de pago y contacto para envío de facturas
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <form.Field name="personaPagos">
+              <form.Field name="persona_pagos">
                 {(field) => (
                   <FormInput
                     label="Persona Pagos"
@@ -489,17 +485,17 @@ export default function OrderForm({ orderId }: OrderFormProps) {
                     value={field.state.value}
                     onChange={(event) => {
                       field.handleChange(event.target.value);
-                      clearFieldErrors("personaPagos");
+                      clearFieldErrors("persona_pagos");
                     }}
                     onBlur={() => {
                       field.handleBlur();
-                      validateField("personaPagos", field.state.value);
+                      validateField("persona_pagos", field.state.value);
                     }}
-                    error={getError("personaPagos")}
+                    error={getError("persona_pagos")}
                   />
                 )}
               </form.Field>
-              <form.Field name="correoFacturas">
+              <form.Field name="correo_facturas">
                 {(field) => (
                   <FormInput
                     label="Correo Facturas"
@@ -508,17 +504,17 @@ export default function OrderForm({ orderId }: OrderFormProps) {
                     value={field.state.value}
                     onChange={(event) => {
                       field.handleChange(event.target.value);
-                      clearFieldErrors("correoFacturas");
+                      clearFieldErrors("correo_facturas");
                     }}
                     onBlur={() => {
                       field.handleBlur();
-                      validateField("correoFacturas", field.state.value);
+                      validateField("correo_facturas", field.state.value);
                     }}
-                    error={getError("correoFacturas")}
+                    error={getError("correo_facturas")}
                   />
                 )}
               </form.Field>
-              <form.Field name="telefonoPagos">
+              <form.Field name="telefono_pagos">
                 {(field) => (
                   <FormInput
                     label="Teléfono Pagos"
@@ -527,17 +523,17 @@ export default function OrderForm({ orderId }: OrderFormProps) {
                     value={field.state.value}
                     onChange={(event) => {
                       field.handleChange(event.target.value);
-                      clearFieldErrors("telefonoPagos");
+                      clearFieldErrors("telefono_pagos");
                     }}
                     onBlur={() => {
                       field.handleBlur();
-                      validateField("telefonoPagos", field.state.value);
+                      validateField("telefono_pagos", field.state.value);
                     }}
-                    error={getError("telefonoPagos")}
+                    error={getError("telefono_pagos")}
                   />
                 )}
               </form.Field>
-              <form.Field name="ordenCompra">
+              <form.Field name="oc">
                 {(field) => (
                   <FormInput
                     label="O.C."
@@ -546,17 +542,17 @@ export default function OrderForm({ orderId }: OrderFormProps) {
                     value={field.state.value}
                     onChange={(event) => {
                       field.handleChange(event.target.value);
-                      clearFieldErrors("ordenCompra");
+                      clearFieldErrors("oc");
                     }}
                     onBlur={() => {
                       field.handleBlur();
-                      validateField("ordenCompra", field.state.value);
+                      validateField("oc", field.state.value);
                     }}
-                    error={getError("ordenCompra")}
+                    error={getError("oc")}
                   />
                 )}
               </form.Field>
-              <form.Field name="formaPago">
+              <form.Field name="forma_pago">
                 {(field) => (
                   <FormSelect
                     label="Forma de Pago"
@@ -569,17 +565,17 @@ export default function OrderForm({ orderId }: OrderFormProps) {
                     value={field.state.value}
                     onChange={(event) => {
                       field.handleChange(event.target.value as typeof field.state.value);
-                      clearFieldErrors("formaPago");
+                      clearFieldErrors("forma_pago");
                     }}
                     onBlur={() => {
                       field.handleBlur();
-                      validateField("formaPago", field.state.value);
+                      validateField("forma_pago", field.state.value);
                     }}
-                    error={getError("formaPago")}
+                    error={getError("forma_pago")}
                   />
                 )}
               </form.Field>
-              <form.Field name="metodoPago">
+              <form.Field name="metodo_pago">
                 {(field) => (
                   <FormSelect
                     label="Método de Pago"
@@ -592,17 +588,17 @@ export default function OrderForm({ orderId }: OrderFormProps) {
                     value={field.state.value}
                     onChange={(event) => {
                       field.handleChange(event.target.value as typeof field.state.value);
-                      clearFieldErrors("metodoPago");
+                      clearFieldErrors("metodo_pago");
                     }}
                     onBlur={() => {
                       field.handleBlur();
-                      validateField("metodoPago", field.state.value);
+                      validateField("metodo_pago", field.state.value);
                     }}
-                    error={getError("metodoPago")}
+                    error={getError("metodo_pago")}
                   />
                 )}
               </form.Field>
-              <form.Field name="usoCfdi">
+              <form.Field name="uso_cfdi">
                 {(field) => (
                   <FormSelect
                     label="Uso de CFDI"
@@ -611,13 +607,13 @@ export default function OrderForm({ orderId }: OrderFormProps) {
                     value={field.state.value}
                     onChange={(event) => {
                       field.handleChange(event.target.value);
-                      clearFieldErrors("usoCfdi");
+                      clearFieldErrors("uso_cfdi");
                     }}
                     onBlur={() => {
                       field.handleBlur();
-                      validateField("usoCfdi", field.state.value);
+                      validateField("uso_cfdi", field.state.value);
                     }}
-                    error={getError("usoCfdi")}
+                    error={getError("uso_cfdi")}
                   />
                 )}
               </form.Field>
@@ -976,7 +972,7 @@ export default function OrderForm({ orderId }: OrderFormProps) {
         </div>
 
         <div className="mt-5 space-y-4">
-          <form.Field name="empaqueEcologico">
+          <form.Field name="empaque_ecologico">
             {(field) => (
               <label className="flex items-start gap-3 rounded-2xl cursor-pointer border border-emerald-100 dark:border-emerald-500/20 bg-emerald-50/60 dark:bg-emerald-500/10 p-4">
                 <input
@@ -986,7 +982,7 @@ export default function OrderForm({ orderId }: OrderFormProps) {
                   checked={Boolean(field.state.value)}
                   onChange={(event) => {
                     field.handleChange(event.target.checked);
-                    clearFieldErrors("empaqueEcologico");
+                    clearFieldErrors("empaque_ecologico");
                   }}
                   onBlur={field.handleBlur}
                 />
@@ -1001,7 +997,7 @@ export default function OrderForm({ orderId }: OrderFormProps) {
               </label>
             )}
           </form.Field>
-          <form.Field name="embarqueParcial">
+          <form.Field name="embarque_parcial">
             {(field) => (
               <label className="flex items-start gap-3 rounded-2xl cursor-pointer border border-amber-100 dark:border-amber-500/20 bg-amber-50/60 dark:bg-amber-500/10 p-4">
                 <input
@@ -1011,7 +1007,7 @@ export default function OrderForm({ orderId }: OrderFormProps) {
                   checked={Boolean(field.state.value)}
                   onChange={(event) => {
                     field.handleChange(event.target.checked);
-                    clearFieldErrors("embarqueParcial");
+                    clearFieldErrors("embarque_parcial");
                   }}
                   onBlur={field.handleBlur}
                 />
@@ -1026,7 +1022,7 @@ export default function OrderForm({ orderId }: OrderFormProps) {
               </label>
             )}
           </form.Field>
-          <form.Field name="comentariosParcialidad">
+          <form.Field name="comentarios_parcialidad">
             {(field) => (
               <FormInput
                 label="Comentarios parcialidad"
@@ -1035,13 +1031,13 @@ export default function OrderForm({ orderId }: OrderFormProps) {
                 value={field.state.value}
                 onChange={(event) => {
                   field.handleChange(event.target.value);
-                  clearFieldErrors("comentariosParcialidad");
+                  clearFieldErrors("comentarios_parcialidad");
                 }}
                 onBlur={() => {
                   field.handleBlur();
-                  validateField("comentariosParcialidad", field.state.value);
+                  validateField("comentarios_parcialidad", field.state.value);
                 }}
-                error={getError("comentariosParcialidad")}
+                error={getError("comentarios_parcialidad")}
               />
             )}
           </form.Field>
@@ -1343,7 +1339,7 @@ export default function OrderForm({ orderId }: OrderFormProps) {
                     <label className="flex items-center gap-2">
                       <input
                         type="checkbox"
-                        className="w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                        className={extraServiceCheckboxClass}
                         name={field.name}
                         checked={Boolean(field.state.value)}
                         onChange={(event) => {
@@ -1354,7 +1350,7 @@ export default function OrderForm({ orderId }: OrderFormProps) {
                       />
                       <span>Envío</span>
                     </label>
-                    <form.Field name="servicioEnvioMonto">
+                    <form.Field name="envio">
                       {(amountField) => (
                         <div className="relative">
                           <span className="absolute left-2 top-1.5 text-xs text-slate-400">
@@ -1369,11 +1365,11 @@ export default function OrderForm({ orderId }: OrderFormProps) {
                             onChange={(event) => {
                               const nextValue = Number(event.target.value);
                               amountField.handleChange(Number.isNaN(nextValue) ? 0 : nextValue);
-                              clearFieldErrors("servicioEnvioMonto");
+                              clearFieldErrors("envio");
                             }}
                             onBlur={() => {
                               amountField.handleBlur();
-                              validateField("servicioEnvioMonto", amountField.state.value);
+                              validateField("envio", amountField.state.value);
                             }}
                           />
                         </div>
@@ -1388,7 +1384,7 @@ export default function OrderForm({ orderId }: OrderFormProps) {
                     <label className="flex items-center gap-2">
                       <input
                         type="checkbox"
-                        className="w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                        className={extraServiceCheckboxClass}
                         name={field.name}
                         checked={Boolean(field.state.value)}
                         onChange={(event) => {
@@ -1399,7 +1395,7 @@ export default function OrderForm({ orderId }: OrderFormProps) {
                       />
                       <span>Programa de Bordados</span>
                     </label>
-                    <form.Field name="programaBordadosMonto">
+                    <form.Field name="programa_bordados">
                       {(amountField) => (
                         <div className="relative">
                           <span className="absolute left-2 top-1.5 text-xs text-slate-400">
@@ -1414,11 +1410,11 @@ export default function OrderForm({ orderId }: OrderFormProps) {
                             onChange={(event) => {
                               const nextValue = Number(event.target.value);
                               amountField.handleChange(Number.isNaN(nextValue) ? 0 : nextValue);
-                              clearFieldErrors("programaBordadosMonto");
+                              clearFieldErrors("programa_bordados");
                             }}
                             onBlur={() => {
                               amountField.handleBlur();
-                              validateField("programaBordadosMonto", amountField.state.value);
+                              validateField("programa_bordados", amountField.state.value);
                             }}
                           />
                         </div>
@@ -1433,7 +1429,7 @@ export default function OrderForm({ orderId }: OrderFormProps) {
                     <label className="flex items-center gap-2">
                       <input
                         type="checkbox"
-                        className="w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                        className={extraServiceCheckboxClass}
                         name={field.name}
                         checked={Boolean(field.state.value)}
                         onChange={(event) => {
@@ -1444,7 +1440,7 @@ export default function OrderForm({ orderId }: OrderFormProps) {
                       />
                       <span>Bordado Pantalones Extras</span>
                     </label>
-                    <form.Field name="bordadoPantalonesExtrasMonto">
+                    <form.Field name="bordado_pantalones_extras">
                       {(amountField) => (
                         <div className="relative">
                           <span className="absolute left-2 top-1.5 text-xs text-slate-400">
@@ -1459,11 +1455,11 @@ export default function OrderForm({ orderId }: OrderFormProps) {
                             onChange={(event) => {
                               const nextValue = Number(event.target.value);
                               amountField.handleChange(Number.isNaN(nextValue) ? 0 : nextValue);
-                              clearFieldErrors("bordadoPantalonesExtrasMonto");
+                              clearFieldErrors("bordado_pantalones_extras");
                             }}
                             onBlur={() => {
                               amountField.handleBlur();
-                              validateField("bordadoPantalonesExtrasMonto", amountField.state.value);
+                              validateField("bordado_pantalones_extras", amountField.state.value);
                             }}
                           />
                         </div>
@@ -1472,30 +1468,29 @@ export default function OrderForm({ orderId }: OrderFormProps) {
                   </div>
                 )}
               </form.Field>
-              <div className="flex items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked
-                    readOnly
-                    className="w-4 h-4 rounded border-slate-300 text-slate-400"
-                  />
-                  <span>Bordado Logotipo (Incluido)</span>
-                </div>
-                <span className="px-2 py-1 rounded-full text-[10px] font-semibold tracking-wide bg-slate-200/70 dark:bg-white/10 text-slate-500 dark:text-slate-300">
-                  GRATIS
-                </span>
-                <form.Field name="bordadoLogotipoIncluido">
-                  {(field) => (
-                    <input
-                      type="hidden"
-                      name={field.name}
-                      value={String(field.state.value)}
-                      readOnly
-                    />
-                  )}
-                </form.Field>
-              </div>
+              <form.Field name="bordado_logotipo">
+                {(field) => (
+                  <div className="flex items-center justify-between gap-3 text-xs text-slate-600 dark:text-slate-300">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        className={extraServiceCheckboxClass}
+                        name={field.name}
+                        checked={Boolean(field.state.value)}
+                        onChange={(event) => {
+                          field.handleChange(event.target.checked);
+                          clearFieldErrors("bordado_logotipo");
+                        }}
+                        onBlur={field.handleBlur}
+                      />
+                      <span>Bordado Logotipo (Incluido)</span>
+                    </label>
+                    <span className="px-2 py-1 rounded-full text-[10px] font-semibold tracking-wide bg-slate-200/70 dark:bg-white/10 text-slate-500 dark:text-slate-300">
+                      GRATIS
+                    </span>
+                  </div>
+                )}
+              </form.Field>
             </div>
           </div>
 
@@ -1621,7 +1616,7 @@ export default function OrderForm({ orderId }: OrderFormProps) {
                   <label className="text-[10px] uppercase font-bold text-slate-400">
                     Seguros
                   </label>
-                  <form.Field name="seguro">
+                  <form.Field name="seguros">
                     {(field) => (
                       <div className="relative">
                         <span className="absolute left-2 top-1.5 text-xs text-slate-400">
@@ -1636,11 +1631,11 @@ export default function OrderForm({ orderId }: OrderFormProps) {
                           onChange={(event) => {
                             const nextValue = Number(event.target.value);
                             field.handleChange(Number.isNaN(nextValue) ? 0 : nextValue);
-                            clearFieldErrors("seguro");
+                            clearFieldErrors("seguros");
                           }}
                           onBlur={() => {
                             field.handleBlur();
-                            validateField("seguro", field.state.value);
+                            validateField("seguros", field.state.value);
                           }}
                         />
                       </div>
@@ -1698,6 +1693,35 @@ export default function OrderForm({ orderId }: OrderFormProps) {
                 <span className="font-medium font-mono text-slate-700 dark:text-slate-200">
                   $0.00
                 </span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-500">Moneda</span>
+                  <div className="w-52">
+                    <form.Field name="moneda">
+                      {(field) => (
+                        <FormSelect
+                          className="px-2 py-1.5 text-xs bg-slate-100 dark:bg-white/10 rounded-lg"
+                          aria-label="Moneda"
+                          options={currencyOptions}
+                          name={field.name}
+                          value={field.state.value}
+                          onChange={(event) => {
+                            const nextValue = Number(event.target.value);
+                            field.handleChange(Number.isNaN(nextValue) ? 0 : nextValue);
+                            clearFieldErrors("moneda");
+                          }}
+                          onBlur={() => {
+                            field.handleBlur();
+                            validateField("moneda", field.state.value);
+                          }}
+                          error={getFieldError(getError("moneda"))}
+                        />
+                      )}
+                    </form.Field>
+                  </div>
+                </div>
+                <span className="font-medium font-mono text-slate-700 dark:text-slate-200" />
               </div>
               <div className="flex justify-between items-center text-sm">
                 <div className="flex items-center gap-2">

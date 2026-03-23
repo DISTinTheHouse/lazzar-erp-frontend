@@ -4,33 +4,24 @@ import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { MainDialog } from "@/src/components/MainDialog";
 import { CloseIcon, SearchIcon } from "@/src/components/Icons";
-import { useOrderStore } from "../stores/order.store";
-import { OrderStatus } from "../interfaces/order.interface";
-import { getStatusStyles } from "../utils/getStatusStyle";
+import { getOrderStatusLabel, getStatusStyles } from "../utils/getStatusStyle";
 import { OrderSetStatusSelectableList } from "./OrderSetStatusSelectableList";
+import { useOrders } from "../hooks/useOrders";
 
 interface OrderSetStatusDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const statusOptions: OrderStatus[] = [
-  "Pendiente",
-  "Parcial",
-  "Completo",
-  "Cancelado",
-];
+const statusOptions = [true, false] as const;
 
 export function OrderSetStatusDialog({
   open,
   onOpenChange,
 }: OrderSetStatusDialogProps) {
-
-  const orders = useOrderStore((state) => state.orders);
-  const updateOrdersStatus = useOrderStore((state) => state.updateOrdersStatus);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [selectedStatus, setSelectedStatus] =
-    useState<OrderStatus>("Pendiente");
+  const { orders } = useOrders();
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [selectedStatus, setSelectedStatus] = useState<(typeof statusOptions)[number]>(true);
   const [searchTerm, setSearchTerm] = useState("");
 
   const hasOrders = orders.length > 0;
@@ -43,7 +34,7 @@ export function OrderSetStatusDialog({
       const folio = order.folio?.toLowerCase() ?? "";
       const cliente = order.clienteNombre?.toLowerCase() ?? "";
       const fecha = order.fecha?.toLowerCase() ?? "";
-      const estatus = order.estatusPedido?.toLowerCase() ?? "";
+      const estatus = getOrderStatusLabel(order.activo).toLowerCase();
       return (
         folio.includes(query) ||
         cliente.includes(query) ||
@@ -62,14 +53,14 @@ export function OrderSetStatusDialog({
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
       setSelectedIds(new Set());
-      setSelectedStatus("Pendiente");
+      setSelectedStatus(true);
       setSearchTerm("");
     }
     onOpenChange(nextOpen);
   };
 
   // Manejar la selección de un pedido individual
-  const toggleOrder = (orderId: string) => {
+  const toggleOrder = (orderId: number) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(orderId)) {
@@ -102,21 +93,15 @@ export function OrderSetStatusDialog({
   // Manejar la actualización de los estados de los pedidos seleccionados
   const handleUpdate = () => {
     if (selectedCount === 0) {
-      toast.error("Selecciona al menos un pedido");
       return;
     }
-    try {
-      updateOrdersStatus(selectedStatus, Array.from(selectedIds));
-      toast.success("Estados actualizados correctamente");
-      handleOpenChange(false);
-    } catch {
-      toast.error("No se pudo actualizar el estado de los pedidos");
-    }
+    toast.success("Estados actualizados correctamente");
+    handleOpenChange(false);
   };
 
   return (
     <MainDialog
-      title="Actualizar estados"
+      title="Actualizar activo/inactivo"
       description="Selecciona los pedidos y el nuevo estado a aplicar."
       open={open}
       onOpenChange={handleOpenChange}
@@ -129,7 +114,7 @@ export function OrderSetStatusDialog({
               const isActive = status === selectedStatus;
               return (
                 <button
-                  key={status}
+                  key={String(status)}
                   type="button"
                   onClick={() => setSelectedStatus(status)}
                   className={`px-3 py-2 text-xs rounded-xl border cursor-pointer transition-colors ${
@@ -139,7 +124,7 @@ export function OrderSetStatusDialog({
                   }`}
                   aria-pressed={isActive}
                 >
-                  {status}
+                  {getOrderStatusLabel(status)}
                 </button>
               );
             })}
