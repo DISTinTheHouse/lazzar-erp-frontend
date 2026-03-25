@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { AxiosError } from "axios";
 import { createOrder } from "../services/actions";
-import type { Order, OrderCreate } from "../interfaces/order.interface";
+import type { OrderCreate } from "../interfaces/order.interface";
 
 type SetOrderError = (
   field: keyof OrderCreate,
@@ -14,7 +14,7 @@ type SetOrderError = (
 export const useCreateOrder = (setError?: SetOrderError) => {
   const queryClient = useQueryClient();
 
-  return useMutation<Order, unknown, OrderCreate>({
+  return useMutation<OrderCreate, unknown, OrderCreate>({
     mutationFn: (payload) => createOrder(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });

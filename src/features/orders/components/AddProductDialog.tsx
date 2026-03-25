@@ -3,13 +3,12 @@
 import { useMemo, useState } from "react";
 import { MainDialog } from "@/src/components/MainDialog";
 import { OrderFormValues } from "../schema/order.schema";
-import { useProducts } from "../../products/hooks/useProducts";
-import { useUnitsOfMeasure } from "../../units-of-measure/hooks/useUnitsOfMeasure";
-import { useSizes } from "../../sizes/hooks/useSizes";
 import { StepSelectProduct } from "./StepSelectProduct";
 import { StepSizes } from "./StepSizes";
 import { StepEmbroidery, type EmbroiderySpecForm } from "./StepEmbroidery";
 import type { CatalogRow as BaseCatalogRow } from "../hooks/useAddProductsDialog";
+import type { Size } from "../../sizes/interfaces/size.interface";
+import type { Product } from "../../products/interfaces/product.interface";
 
 type OrderItem = OrderFormValues["items"][number];
 
@@ -24,6 +23,8 @@ interface AddProductDialogProps {
   onUpdateItem?: (item: OrderItem) => void;
   initialItem?: OrderItem | null;
   startStep?: Step;
+  sizes: Size[];
+  products: Partial<Product>[];
 }
 
 type Step = "select" | "sizes" | "embroidery";
@@ -52,10 +53,9 @@ export function AddProductDialog({
   onUpdateItem,
   initialItem,
   startStep = "select",
+  sizes,
+  products,
 }: AddProductDialogProps) {
-  const { products } = useProducts();
-  const { units } = useUnitsOfMeasure();
-  const { sizes, isLoading: isLoadingSizes } = useSizes();
 
   const [search, setSearch] = useState("");
   const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
@@ -110,32 +110,30 @@ export function AddProductDialog({
   };
 
   const rows = useMemo<CatalogRow[]>(() => {
-    const unitsById = new Map(units.map((u) => [u.id, u]));
-
     return (products || [])
       .map((product) => {
-        const unit = unitsById.get(product.unidad_medida);
+        if (!product.id) return null;
         const precio = Number(product.precio_base);
         return {
           id: product.id,
           nombre: product.nombre ?? "",
           descripcion: product.descripcion ?? "",
-          unidad: unit?.clave ?? "PZA",
+          unidad: "PZA", // mantenido para compatibilidad interna pero no mostrado en UI
           precio: Number.isFinite(precio) ? precio : 0,
-          isActive: Boolean(product.activo),
+          isActive: product.activo ?? true,
           productoId: product.id,
-        } satisfies CatalogRow;
+        } as CatalogRow;
       })
       .filter((r): r is CatalogRow => Boolean(r))
       .filter((r) => r.isActive)
       .sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
-  }, [products, units]);
+  }, [products]);
 
   const filteredRows = useMemo(() => {
     const query = search.trim().toLowerCase();
     if (!query) return rows;
     return rows.filter((r) => {
-      const haystack = `${r.nombre} ${r.descripcion} ${r.unidad}`.toLowerCase();
+      const haystack = `${r.nombre} ${r.descripcion}`.toLowerCase();
       return haystack.includes(query);
     });
   }, [rows, search]);
@@ -433,7 +431,6 @@ export function AddProductDialog({
         <StepSizes
           selectedRow={selectedRow}
           sizes={sizes}
-          isLoadingSizes={isLoadingSizes}
           mergedSizeQuantities={mergedSizeQuantities}
           updateSizeQuantity={updateSizeQuantity}
           totalCantidad={totalCantidad}

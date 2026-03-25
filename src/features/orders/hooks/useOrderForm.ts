@@ -6,27 +6,29 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEventHandler } from "react";
 import toast from "react-hot-toast";
-import { Customer } from "../../customers/interfaces/customer.interface";
-import { useCustomers } from "../../customers/hooks/useCustomers";
-import { useSatInfo } from "../../sat/hooks/useSatInfo";
+import type { Customer } from "../../customers/interfaces/customer.interface";
 import { useCurrencies } from "../../currency/hooks/useCurrencies";
-import { useProducts } from "../../products/hooks/useProducts";
-import { useUnitsOfMeasure } from "../../units-of-measure/hooks/useUnitsOfMeasure";
 import type { FormFieldError } from "../../../utils/getFieldError";
 import { orderFormSchema, type OrderFormValues } from "../schema/order.schema";
-import { Order, OrderCreate, OrderItem, type OrderPaymentCondition } from "../interfaces/order.interface";
+import {
+  Order,
+  OrderCreate,
+  OrderItem,
+  OrderOnboardingData,
+  type OrderPaymentCondition,
+} from "../interfaces/order.interface";
 import { useWorkspaceStore } from "../../workspace/store/workspace.store";
 import { useCreateOrder } from "./useCreateOrder";
 import { useOrders } from "./useOrders";
 import { useUpdateOrder } from "./useUpdateOrder";
-import { useCreateOrderProductDetail } from "./useCreateOrderProductDetail";
-import { useOrderProductDetails } from "./useOrderProductDetails";
+import { useOrderOnboardingData } from "./useOrderOnboardingData";
 
 interface UseOrderFormParams {
   orderId?: string;
 }
 
 type OrderField = keyof OrderFormValues;
+type OnboardingCustomer = OrderOnboardingData["busqueda"]["clientes"][number];
 type ErrorNode = {
   [key: string]: ErrorNode | FormFieldError | ErrorNode[] | undefined;
 };
@@ -63,12 +65,7 @@ const ORIGIN_FIELD_MAP: { label: string; field: OriginFlagKey }[] = [
 
 const ORIGIN_OPTIONS = ORIGIN_FIELD_MAP.map((item) => item.label);
 
-const DOCUMENT_TYPE_VALUES = ["Pedido de Venta", "Muestra"] as const;
 
-const DOCUMENT_TYPE_OPTIONS = [
-  { value: "Pedido de Venta", label: "Pedido de Venta" },
-  { value: "Muestra", label: "Muestra" },
-];
 
 const PAYMENT_CONDITION_OPTIONS: { value: OrderPaymentCondition; label: string }[] = [
   { value: "100_anticipo", label: "100% Anticipo" },
@@ -85,22 +82,12 @@ const IVA_OPTIONS = [
   { value: 0, label: "0%" },
 ];
 
-const PAYMENT_FORM_VALUES = ["01", "03", "04"] as const;
-const PAYMENT_METHOD_VALUES = ["PUE", "PPD", "NA"] as const;
-
 // Guards de dominio para asegurar que los valores persistidos siempre coincidan con el esquema actual.
-const getValidPaymentForm = (value: string): (typeof PAYMENT_FORM_VALUES)[number] =>
-  PAYMENT_FORM_VALUES.find((item) => item === value) ?? "03";
+const getValidPaymentForm = (value: string): string => value || "03";
 
-const getValidPaymentMethod = (value: string): (typeof PAYMENT_METHOD_VALUES)[number] =>
-  PAYMENT_METHOD_VALUES.find((item) => item === value) ?? "PUE";
+const getValidPaymentMethod = (value: string): string => value || "PUE";
 
-const getValidDocumentType = (value: string): (typeof DOCUMENT_TYPE_VALUES)[number] => {
-  if (value === "Pedido") {
-    return "Pedido de Venta";
-  }
-  return DOCUMENT_TYPE_VALUES.find((item) => item === value) ?? "Pedido de Venta";
-};
+
 
 const getUsoCfdiCode = (value: string) => {
   const normalized = value.trim();
@@ -211,7 +198,7 @@ const normalizeOrderValues = (order: Order, fallbackUserName: string): OrderForm
   oc: order.oc ?? order.ordenCompra ?? "",
   forma_pago: getValidPaymentForm(order.forma_pago ?? order.formaPago ?? ""),
   metodo_pago: getValidPaymentMethod(order.metodo_pago ?? order.metodoPago ?? ""),
-  tipoDocumento: getValidDocumentType(order.tipoDocumento ?? ""),
+  tipo_pedido: Number(order.tipo_pedido) || 0,
   uso_cfdi: getUsoCfdiCode(order.uso_cfdi ?? order.usoCfdi ?? ""),
   referenciarOcFactura: Boolean(order.referenciarOcFactura),
   condicionPago: order.condicionPago ?? "100_anticipo",
@@ -283,7 +270,7 @@ const createEmptyValues = (todayStr: string, userName: string): OrderFormValues 
   condicionPagoMonto: 0,
   fecha: todayStr,
   agente: userName,
-  tipoDocumento: "Pedido de Venta",
+  tipo_pedido: 0,
   origen: "",
   destinatario: "",
   empresaEnvio: "",
@@ -422,33 +409,27 @@ export function useOrderForm({ orderId }: UseOrderFormParams) {
   // Dependencias de navegación y fuentes de datos del formulario.
   const router = useRouter();
   const { data: session } = useSession();
-  const { customers, isLoading: isCustomersLoading } = useCustomers();
-  const { data: satInfo, isLoading: isSatInfoLoading } = useSatInfo();
   const { data: currencies, isLoading: isCurrenciesLoading } = useCurrencies();
+  const { data: onboardingData, isLoading: isOnboardingLoading } = useOrderOnboardingData();
   const { orders, isLoading: isOrdersLoading } = useOrders();
-  const selectedBranchId = useWorkspaceStore((state) => state.selectedBranch?.id ?? 0);
+  const { selectedCompany, selectedBranch } = useWorkspaceStore();
+  const selectedCompanyId = selectedCompany?.id || 1; // Fallback
+  const selectedBranchId = selectedBranch?.id || 1; // Fallback
   const { mutateAsync: createOrderMutation, isPending: isCreatingOrder } = useCreateOrder();
   const { mutateAsync: updateOrderMutation, isPending: isUpdatingOrder } = useUpdateOrder();
-  const { mutateAsync: createOrderProductDetailMutation, isPending: isCreatingDetails } = useCreateOrderProductDetail();
-
-  const orderIdNumber = orderId ? parseInt(orderId, 10) : undefined;
-  const isEditMode = Boolean(orderIdNumber && !isNaN(orderIdNumber));
-  const { orderProductDetails, isOrderProductDetailsLoading } = useOrderProductDetails(orderIdNumber, isEditMode);
-
-  const { products } = useProducts();
-  const { units } = useUnitsOfMeasure();
 
   const userName = session?.user?.name || "Usuario";
   const sellerName = userName;
   const todayStr = new Date().toISOString().slice(0, 10);
   const formRef = useRef<HTMLFormElement | null>(null);
+  const customers = useMemo(() => onboardingData?.busqueda.clientes ?? [], [onboardingData?.busqueda.clientes]);
+  const isCustomersLoading = isOnboardingLoading;
   const [errorTree, setErrorTree] = useState<ErrorNode>({});
   const [isAddProductsOpen, setIsAddProductsOpen] = useState(false);
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
   const [isSubmittingForm, setIsSubmittingForm] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState(0);
-  const [hasPopulatedItems, setHasPopulatedItems] = useState(false);
 
   // Contexto de modo edición/creación y valores base.
   const orderToEdit = useMemo(
@@ -547,49 +528,99 @@ export function useOrderForm({ orderId }: UseOrderFormParams) {
         otra_cantidad: condicion === "otra_cantidad",
       });
 
-      const orderCreatePayload: OrderCreate = {
-        tipo_pedido: parsed.data.tipoDocumento === "Pedido de Venta" ? 1 : 2,
-        estatus: parsed.data.estatusPedido === "Pendiente" ? 1 : parsed.data.estatusPedido === "Parcial" ? 2 : parsed.data.estatusPedido === "Completo" ? 3 : 4,
-        ...mapOrigenFlags(parsed.data.origen),
-        ...mapCondicionPagoFlags(parsed.data.condicionPago),
-        persona_pagos: parsed.data.persona_pagos,
-        correo_facturas: parsed.data.correo_facturas,
-        telefono_pagos: parsed.data.telefono_pagos,
-        oc: parsed.data.oc,
-        forma_pago: parsed.data.forma_pago,
-        metodo_pago: parsed.data.metodo_pago,
-        uso_cfdi: parsed.data.uso_cfdi,
-        monto: String(parsed.data.condicionPagoMonto ?? 0),
-        empaque_ecologico: parsed.data.empaque_ecologico,
-        embarque_parcial: parsed.data.embarque_parcial,
-        comentarios_parcialidad: parsed.data.embarque_parcial
-          ? parsed.data.comentarios_parcialidad || ""
-          : "",
-        envio: String(servicioEnvio.toFixed(2)),
-        programa_bordados: String(programaBordados.toFixed(2)),
-        bordado_pantalones_extras: String(bordadoPantalones.toFixed(2)),
-        bordado_logotipo: parsed.data.bordado_logotipo,
-        observaciones: parsed.data.observaciones || "",
-        flete: String(parsed.data.flete.toFixed(2)),
-        seguros: String(parsed.data.seguros.toFixed(2)),
-        anticipo: String(parsed.data.anticipo.toFixed(2)),
-        subtotal: String(totals.subtotal.toFixed(2)),
-        descuento_global: String(totals.descuentoTotal.toFixed(2)),
-        ieps: "0.00",
-        iva: parsed.data.iva,
-        gran_total: String(totals.granTotal.toFixed(2)),
-        activo: true,
-        sucursal: selectedBranchId,
-        cliente: selectedCustomerId || editingCustomerId,
-        moneda: parsed.data.moneda,
-      };
+      const detalle = parsed.data.items.map((item) => {
+        const llevaBordado = Boolean(item.bordados?.activo);
+        const bordadoConfig =
+          llevaBordado
+            ? {
+                ubicaciones:
+                  item.bordados?.especificaciones?.map((spec) => ({
+                    codigo: spec.posicionCodigo,
+                    ancho_cm: Math.max(0, Number(spec.ancho) || 0),
+                    alto_cm: Math.max(0, Number(spec.alto) || 0),
+                    color_hilo: spec.colorHilo ?? null,
+                  })) ?? [],
+                notas: item.bordados?.observaciones ?? "",
+              }
+            : {
+                ubicaciones: [],
+                notas: "",
+              };
+        return {
+          producto: item.productoId,
+          tallas:
+            item.tallas?.map((t) => ({
+              talla: t.tallaId,
+              cantidad: Math.max(0, Number(t.cantidad) || 0),
+              lleva_bordado: llevaBordado,
+              bordado_config: bordadoConfig,
+            })) ?? [],
+        };
+      });
 
-      let orderId: number;
+      const orderCreatePayload: OrderCreate = {
+        pedido: {
+          empresa: selectedCompanyId || 1, // Fallback safe si no hay empresa en workspace
+          sucursal: selectedBranchId || 1, // Fallback safe si no hay sucursal
+          cliente: selectedCustomerId || editingCustomerId || 1, // Fallback
+          moneda: parsed.data.moneda || 1, // Fallback si no viene moneda
+          persona_pagos: parsed.data.persona_pagos,
+          correo_facturas: parsed.data.correo_facturas,
+          telefono_pagos: parsed.data.telefono_pagos,
+          forma_pago: parsed.data.forma_pago,
+          metodo_pago: parsed.data.metodo_pago,
+          uso_cfdi: parsed.data.uso_cfdi,
+          tipo_pedido: parsed.data.tipo_pedido,
+          estatus:
+            parsed.data.estatusPedido === "Pendiente"
+              ? 1
+              : parsed.data.estatusPedido === "Parcial"
+              ? 2
+              : parsed.data.estatusPedido === "Completo"
+              ? 3
+              : 4,
+          ...mapOrigenFlags(parsed.data.origen),
+          ...mapCondicionPagoFlags(parsed.data.condicionPago),
+          oc: parsed.data.oc?.trim() || "",
+          monto: parsed.data.condicionPagoMonto ? String(parsed.data.condicionPagoMonto) : "0",
+          empaque_ecologico: Boolean(parsed.data.empaque_ecologico),
+          cliente_razon_social: parsed.data.razonSocial || "",
+          cliente_nombre: parsed.data.clienteNombre || "",
+          cliente_rfc: parsed.data.rfc || "",
+          cliente_regimen_fiscal: parsed.data.regimenFiscal ? Number(parsed.data.regimenFiscal) : 1, // o el default que manejen
+          cliente_direccion_fiscal: parsed.data.direccionFiscal || "",
+          cliente_colonia: parsed.data.coloniaFiscal || "",
+          cliente_codigo_postal: parsed.data.codigoPostalFiscal || "",
+          cliente_ciudad: parsed.data.ciudadFiscal || "",
+          cliente_estado: parsed.data.estadoFiscal || "",
+          cliente_giro_empresarial: parsed.data.giroEmpresa || "",
+          embarque_parcial: Boolean(parsed.data.embarque_parcial),
+          comentarios_parcialidad: parsed.data.embarque_parcial
+            ? parsed.data.comentarios_parcialidad || ""
+            : "",
+          observaciones: parsed.data.observaciones || "",
+          envio: servicioEnvio ? String(servicioEnvio.toFixed(2)) : "0.00",
+          programa_bordados: programaBordados ? String(programaBordados.toFixed(2)) : "0.00",
+          bordado_pantalones_extras: bordadoPantalones ? String(bordadoPantalones.toFixed(2)) : "0.00",
+          bordado_logotipo: Boolean(parsed.data.bordado_logotipo),
+          flete: parsed.data.flete ? String(parsed.data.flete.toFixed(2)) : "0.00",
+          seguros: parsed.data.seguros ? String(parsed.data.seguros.toFixed(2)) : "0.00",
+          anticipo: parsed.data.anticipo ? String(parsed.data.anticipo.toFixed(2)) : "0.00",
+          subtotal: totals.subtotal ? String(totals.subtotal.toFixed(2)) : "0.00",
+          descuento_global: totals.descuentoTotal ? String(totals.descuentoTotal.toFixed(2)) : "0.00",
+          ieps: "0.00",
+          iva: parsed.data.iva || 0,
+          gran_total: totals.granTotal ? String(totals.granTotal.toFixed(2)) : "0.00",
+          activo: true,
+          cotización: { id: 1 },
+        },
+        detalle,
+      };
 
       if (isEditing && orderToEdit) {
         const updatePayload: Order = {
           ...orderToEdit,
-          ...orderCreatePayload,
+          ...orderCreatePayload.pedido,
           id: orderToEdit.id,
           empresa: orderToEdit.empresa,
           cotizacion: orderToEdit.cotizacion,
@@ -597,25 +628,12 @@ export function useOrderForm({ orderId }: UseOrderFormParams) {
           updated_at: orderToEdit.updated_at,
           fecha_confirmacion: orderToEdit.fecha_confirmacion,
         };
-        const updatedOrder = await updateOrderMutation(updatePayload);
-        orderId = updatedOrder.id;
+        await updateOrderMutation(updatePayload);
       } else {
-        const createdOrder = await createOrderMutation(orderCreatePayload);
-        orderId = createdOrder.id;
+        await createOrderMutation(orderCreatePayload);
       }
 
-      if (orderId && parsed.data.items.length > 0) {
-        const detailPromises = parsed.data.items.map((item) => {
-          return createOrderProductDetailMutation({
-            pedido: orderId,
-            producto: item.productoId,
-            precio_unitario: String(item.precio.toFixed(2)),
-            costo_unitario: "0.00",
-            subtotal_linea: String(item.importe.toFixed(2)),
-          });
-        });
-        await Promise.allSettled(detailPromises);
-      }
+      // Con la nueva estructura, el detalle se envía dentro del payload de creación.
 
       form.reset(emptyValues);
       router.push("/sales/orders");
@@ -629,33 +647,6 @@ export function useOrderForm({ orderId }: UseOrderFormParams) {
     }
     form.reset(normalizedEditValues);
   }, [form, isEditing, normalizedEditValues]);
-
-  // Effect to populate items from orderProductDetails when in edit mode
-  useEffect(() => {
-    if (isEditing && orderProductDetails.length > 0 && products.length > 0 && units.length > 0 && !hasPopulatedItems) {
-      const unitsById = new Map(units.map((u) => [u.id, u]));
-      
-      const itemsFromDetails: OrderItem[] = orderProductDetails.map((detail) => {
-        const product = products.find((p) => p.id === detail.producto);
-        const unit = product ? unitsById.get(product.unidad_medida) : null;
-        
-        const precio = Number(detail.precio_unitario) || 0;
-        const cantidad = 0; // Por defecto a 0 como se solicitó
-        const importe = 0; // Importe es 0 porque cantidad es 0
-        return {
-          productoId: detail.producto,
-          descripcion: product?.nombre || "Producto no encontrado",
-          unidad: unit?.clave || "PZA",
-          cantidad,
-          precio,
-          descuento: 0,
-          importe,
-        };
-      });
-      form.setFieldValue("items", itemsFromDetails);
-      setHasPopulatedItems(true);
-    }
-  }, [isEditing, orderProductDetails, products, units, form, hasPopulatedItems]);
 
   // Snapshot reactivo de valores del formulario para derivados y sincronizaciones.
   const values = useStore(form.baseStore, (state) => state.values);
@@ -795,26 +786,23 @@ export function useOrderForm({ orderId }: UseOrderFormParams) {
   };
 
   // Hidrata todos los campos dependientes al seleccionar cliente.
-  const handleSelectCustomer = useCallback((customer: Customer, usoCfdiOverride?: string) => {
+  const handleSelectCustomer = useCallback((customer: OnboardingCustomer, usoCfdiOverride?: string) => {
     // Hidrata facturación, contacto y envío al seleccionar cliente.
-    const selectedRegimen = satInfo?.regimenes_fiscales.find(
-      (item) => item.id_sat_regimen_fiscal === customer.sat_regimen_fiscal
+    const selectedRegimen = onboardingData?.catalogos.regimenes_fiscales.find(
+      (item) => item.value === String(customer.sat_regimen_fiscal_id)
     );
-    const selectedUsoCfdi = satInfo?.usos_cfdi.find(
-      (item) => item.id_sat_uso_cfdi === customer.sat_uso_cfdi
-    );
-    const regimenLabel = selectedRegimen
-      ? `${selectedRegimen.codigo} - ${selectedRegimen.descripcion}`
-      : "";
-    const usoCfdiCode = selectedUsoCfdi?.codigo ?? "";
+    const regimenValue =
+      selectedRegimen?.value ??
+      customer.sat_regimen_fiscal__codigo ??
+      String(customer.sat_regimen_fiscal_id);
     const normalizedUsoCfdiOverride = usoCfdiOverride?.trim();
-    const resolvedUsoCfdi = normalizedUsoCfdiOverride || usoCfdiCode;
+    const resolvedUsoCfdi = normalizedUsoCfdiOverride || "";
 
     form.setFieldValue("clienteBusqueda", customer.razon_social ?? customer.nombre ?? "");
     form.setFieldValue("clienteNombre", customer.nombre ?? "");
     form.setFieldValue("razonSocial", customer.razon_social ?? "");
     form.setFieldValue("rfc", customer.rfc ?? "");
-    form.setFieldValue("regimenFiscal", regimenLabel);
+    form.setFieldValue("regimenFiscal", regimenValue);
     form.setFieldValue("direccionFiscal", customer.direccion_fiscal ?? "");
     form.setFieldValue("coloniaFiscal", customer.colonia ?? "");
     form.setFieldValue("codigoPostalFiscal", customer.codigo_postal ?? "");
@@ -838,7 +826,7 @@ export function useOrderForm({ orderId }: UseOrderFormParams) {
       form.setFieldValue("uso_cfdi", resolvedUsoCfdi);
     }
     clearFieldErrors("clienteBusqueda");
-  }, [clearFieldErrors, form, satInfo?.regimenes_fiscales, satInfo?.usos_cfdi]);
+  }, [clearFieldErrors, form, onboardingData?.catalogos.regimenes_fiscales]);
 
   const autoSelectedOrderIdRef = useRef<number | null>(null);
   useEffect(() => {
@@ -863,7 +851,29 @@ export function useOrderForm({ orderId }: UseOrderFormParams) {
     if (!customer) {
       return;
     }
-    handleSelectCustomer(customer);
+    const selectedRegimen = onboardingData?.catalogos.regimenes_fiscales.find(
+      (item) => item.value === String(customer.sat_regimen_fiscal)
+    );
+    const [regimenCodigo = "", regimenDescripcion = ""] = (selectedRegimen?.label ?? "")
+      .split(" - ")
+      .map((item) => item.trim());
+    handleSelectCustomer({
+      id: Number(customer.id),
+      razon_social: customer.razon_social,
+      nombre: customer.nombre,
+      rfc: customer.rfc,
+      correo: customer.correo,
+      telefono: customer.telefono,
+      direccion_fiscal: customer.direccion_fiscal,
+      colonia: customer.colonia,
+      codigo_postal: customer.codigo_postal,
+      ciudad: customer.ciudad,
+      estado: customer.estado,
+      giro_empresarial: customer.giro_empresarial,
+      sat_regimen_fiscal_id: Number(customer.sat_regimen_fiscal),
+      sat_regimen_fiscal__codigo: regimenCodigo,
+      sat_regimen_fiscal__descripcion: regimenDescripcion,
+    });
   };
 
   // Submit controlado para evitar dobles envíos y estados pendientes colgados.
@@ -911,33 +921,50 @@ export function useOrderForm({ orderId }: UseOrderFormParams) {
     router.push("/sales/orders");
   };
 
-  const isPending = isSubmittingForm || form.state.isSubmitting || isCreatingOrder || isUpdatingOrder || isCreatingDetails;
+  const isPending = isSubmittingForm || form.state.isSubmitting || isCreatingOrder || isUpdatingOrder;
   const itemErrors = getError("items");
   const docRelacionadoError = getError("docRelacionado");
-  const tipoDocumentoError = getError("tipoDocumento");
+  const tipoPedidoError = getError("tipo_pedido");
   const origenError = getError("origen");
 
-  // Opciones SAT transformadas a formato label/value para selects.
+  // Opciones desde onboarding y SAT.
+  const tiposPedidoOptions = useMemo(
+    () => [
+      { value: 0, label: "Seleccionar..." },
+      ...(onboardingData?.catalogos.tipos_pedido ?? []),
+    ],
+    [onboardingData?.catalogos.tipos_pedido]
+  );
+  const formasPagoOptions = useMemo(
+    () => [
+      { value: "", label: "Seleccionar..." },
+      ...(onboardingData?.catalogos.formas_pago ?? []),
+    ],
+    [onboardingData?.catalogos.formas_pago]
+  );
+
+  const metodosPagoOptions = useMemo(
+    () => [
+      { value: "", label: "Seleccionar..." },
+      ...(onboardingData?.catalogos.metodos_pago ?? []),
+    ],
+    [onboardingData?.catalogos.metodos_pago]
+  );
+
   const regimenFiscalOptions = useMemo(
     () => [
       { value: "", label: "Seleccionar..." },
-      ...(satInfo?.regimenes_fiscales ?? []).map((item) => ({
-        value: `${item.codigo} - ${item.descripcion}`,
-        label: `${item.codigo} - ${item.descripcion}`,
-      })),
+      ...(onboardingData?.catalogos.regimenes_fiscales ?? []),
     ],
-    [satInfo?.regimenes_fiscales]
+    [onboardingData?.catalogos.regimenes_fiscales]
   );
 
   const usoCfdiOptions = useMemo(
     () => [
       { value: "", label: "Seleccionar..." },
-      ...(satInfo?.usos_cfdi ?? []).map((item) => ({
-        value: item.codigo,
-        label: `${item.codigo} - ${item.descripcion}`,
-      })),
+      ...(onboardingData?.catalogos.usos_cfdi ?? []),
     ],
-    [satInfo?.usos_cfdi]
+    [onboardingData?.catalogos.usos_cfdi]
   );
   const currencyOptions = useMemo(
     () => {
@@ -986,17 +1013,20 @@ export function useOrderForm({ orderId }: UseOrderFormParams) {
     sellerName,
     userName,
     todayStr,
-    documentTypeOptions: DOCUMENT_TYPE_OPTIONS,
+    tiposPedidoOptions,
     originOptions: ORIGIN_OPTIONS,
     paymentConditionOptions: PAYMENT_CONDITION_OPTIONS,
     ivaOptions: IVA_OPTIONS,
     regimenFiscalOptions,
     usoCfdiOptions,
     currencyOptions,
+    formasPagoOptions,
+    metodosPagoOptions,
+    sizes: onboardingData?.catalogos.tallas ?? [],
+    products: onboardingData?.busqueda.productos ?? [],
     isCustomersLoading,
-    isSatInfoLoading,
     isCurrenciesLoading,
-    isOrderProductDetailsLoading,
+    isOnboardingLoading,
     showForm,
     handleFormSubmit,
     handleReset,
@@ -1016,7 +1046,7 @@ export function useOrderForm({ orderId }: UseOrderFormParams) {
     saldoPendiente,
     itemsError: itemErrors,
     docRelacionadoError,
-    tipoDocumentoError,
+    tipoPedidoError,
     origenError,
     isAddProductsOpen,
     setIsAddProductsOpen,

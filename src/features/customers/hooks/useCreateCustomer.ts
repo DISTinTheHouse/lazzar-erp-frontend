@@ -10,13 +10,24 @@ type SetCustomerError = (
   error: { type?: string; message?: string }
 ) => void;
 
-export const useCreateCustomer = (setError?: SetCustomerError) => {
+interface UseCreateCustomerOptions {
+  setError?: SetCustomerError;
+  invalidateOrderOnboarding?: boolean;
+}
+
+export const useCreateCustomer = ({
+  setError,
+  invalidateOrderOnboarding = false,
+}: UseCreateCustomerOptions = {}) => {
   const queryClient = useQueryClient();
 
   return useMutation<Customer, unknown, CustomerCreate>({
     mutationFn: (payload: CustomerCreate) => createCustomer(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["customers"] });
+      if (invalidateOrderOnboarding) {
+        queryClient.invalidateQueries({ queryKey: ["order-onboarding"] });
+      }
       toast.success("Cliente registrado correctamente");
     },
     onError: (error) => {

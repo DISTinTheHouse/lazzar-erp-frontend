@@ -48,10 +48,11 @@ export function AddProductsSelectableItem({
           <p className="text-sm font-semibold text-slate-800 dark:text-white truncate">
             {row.nombre}
           </p>
-          <p className="text-xs text-slate-500 dark:text-slate-300 mt-1 line-clamp-2">
-            {row.unidad}
-            {row.descripcion ? ` · ${row.descripcion}` : ""}
-          </p>
+          {row.descripcion ? (
+            <p className="text-xs text-slate-500 dark:text-slate-300 mt-1 line-clamp-2">
+              {row.descripcion}
+            </p>
+          ) : null}
         </div>
         <div className="flex items-end flex-col gap-1">
           {isAlreadyAdded ? (

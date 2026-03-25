@@ -35,17 +35,20 @@ export default function OrderForm({ orderId }: OrderFormProps) {
     sellerName,
     userName,
     todayStr,
-    documentTypeOptions,
+    tiposPedidoOptions,
     originOptions,
     paymentConditionOptions,
     ivaOptions,
     regimenFiscalOptions,
     usoCfdiOptions,
     currencyOptions,
+    formasPagoOptions,
+    metodosPagoOptions,
+    sizes,
+    products,
     isCustomersLoading,
-    isSatInfoLoading,
     isCurrenciesLoading,
-    isOrderProductDetailsLoading,
+    isOnboardingLoading,
     showForm,
     handleFormSubmit,
     handleReset,
@@ -65,7 +68,7 @@ export default function OrderForm({ orderId }: OrderFormProps) {
     saldoPendiente,
     itemsError,
     docRelacionadoError,
-    tipoDocumentoError,
+    tipoPedidoError,
     origenError,
     isAddProductsOpen,
     setIsAddProductsOpen,
@@ -84,7 +87,7 @@ export default function OrderForm({ orderId }: OrderFormProps) {
     "h-4 w-4 shrink-0 rounded border-slate-300 text-sky-600 focus:ring-sky-500";
 
   // Estado de carga del formulario
-  const isFormLoading = isCustomersLoading || isSatInfoLoading || isCurrenciesLoading || isOrderProductDetailsLoading || !showForm;
+  const isFormLoading = isCustomersLoading || isCurrenciesLoading || isOnboardingLoading || !showForm;
   if (isFormLoading) {
     return (
       <div className="w-full pt-2">
@@ -149,22 +152,22 @@ export default function OrderForm({ orderId }: OrderFormProps) {
               {(field) => <input type="hidden" name={field.name} value={field.state.value} readOnly />}
             </form.Field>
             <div className="space-y-4">
-              <form.Field name="tipoDocumento">
+              <form.Field name="tipo_pedido">
                 {(field) => (
                   <FormSelect
-                    label="Tipo Documento"
-                    options={documentTypeOptions}
+                    label="Tipo de Pedido"
+                    options={tiposPedidoOptions}
                     name={field.name}
                     value={field.state.value}
                     onChange={(event) => {
-                      field.handleChange(event.target.value);
-                      clearFieldErrors("tipoDocumento");
+                      field.handleChange(Number(event.target.value));
+                      clearFieldErrors("tipo_pedido");
                     }}
                     onBlur={() => {
                       field.handleBlur();
-                      validateField("tipoDocumento", field.state.value);
+                      validateField("tipo_pedido", field.state.value);
                     }}
-                    error={tipoDocumentoError}
+                    error={tipoPedidoError}
                   />
                 )}
               </form.Field>
@@ -244,7 +247,7 @@ export default function OrderForm({ orderId }: OrderFormProps) {
                   maxWidth="900px"
                   hideCloseButton={true}
                 >
-                  <CustomerForm onCreated={handleCustomerCreated} />
+                  <CustomerForm onCreated={handleCustomerCreated} invalidateOrderOnboarding />
                 </MainDialog>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -540,14 +543,14 @@ export default function OrderForm({ orderId }: OrderFormProps) {
                     label="O.C."
                     placeholder="Orden de compra"
                     name={field.name}
-                    value={field.state.value}
+                    value={field.state.value ?? ""}
                     onChange={(event) => {
                       field.handleChange(event.target.value);
                       clearFieldErrors("oc");
                     }}
                     onBlur={() => {
                       field.handleBlur();
-                      validateField("oc", field.state.value);
+                      validateField("oc", field.state.value ?? "");
                     }}
                     error={getError("oc")}
                   />
@@ -557,11 +560,7 @@ export default function OrderForm({ orderId }: OrderFormProps) {
                 {(field) => (
                   <FormSelect
                     label="Forma de Pago"
-                    options={[
-                      { value: "01", label: "01 - Efectivo" },
-                      { value: "03", label: "03 - Transferencia" },
-                      { value: "04", label: "04 - Tarjeta" },
-                    ]}
+                    options={formasPagoOptions}
                     name={field.name}
                     value={field.state.value}
                     onChange={(event) => {
@@ -580,11 +579,7 @@ export default function OrderForm({ orderId }: OrderFormProps) {
                 {(field) => (
                   <FormSelect
                     label="Método de Pago"
-                    options={[
-                      { value: "PUE", label: "PUE - Pago en una sola exhibición" },
-                      { value: "PPD", label: "PPD - Pago en parcialidades" },
-                      { value: "NA", label: "N/A" },
-                    ]}
+                    options={metodosPagoOptions}
                     name={field.name}
                     value={field.state.value}
                     onChange={(event) => {
@@ -1090,6 +1085,8 @@ export default function OrderForm({ orderId }: OrderFormProps) {
           }
           initialItem={editIndex !== null ? watchedItems?.[editIndex] : null}
           startStep={editIndex !== null ? "sizes" : "select"}
+          sizes={sizes}
+          products={products}
         />
 
         {/* Detalle de productos */}
@@ -1105,9 +1102,6 @@ export default function OrderForm({ orderId }: OrderFormProps) {
                 </th>
                 <th className="p-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider min-w-40">
                   Descripción
-                </th>
-                <th className="p-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider w-16 text-center">
-                  UM
                 </th>
                 <th className="p-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider w-56">
                   Tallas
@@ -1134,7 +1128,7 @@ export default function OrderForm({ orderId }: OrderFormProps) {
               {fields.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={11}
+                    colSpan={10}
                     className="p-6 text-center text-sm text-slate-500 dark:text-slate-400"
                   >
                     No hay productos agregados.
@@ -1144,7 +1138,6 @@ export default function OrderForm({ orderId }: OrderFormProps) {
                 fields.map((field: { id: string }, index: number) => {
                   const productoIdError = getFieldError(getError(`items.${index}.productoId`));
                   const descripcionError = getFieldError(getError(`items.${index}.descripcion`));
-                  const unidadError = getFieldError(getError(`items.${index}.unidad`));
                   const cantidadError = getFieldError(getError(`items.${index}.cantidad`));
                   const precioError = getFieldError(getError(`items.${index}.precio`));
                   const descuentoError = getFieldError(getError(`items.${index}.descuento`));
@@ -1200,20 +1193,6 @@ export default function OrderForm({ orderId }: OrderFormProps) {
                           {descripcionError && (
                             <p className="text-[10px] text-rose-600 dark:text-rose-400">
                               {descripcionError.message}
-                            </p>
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-2">
-                        <div className="space-y-1">
-                          <div
-                            className={`text-xs text-center uppercase text-slate-600 dark:text-slate-300 ${unidadError ? "text-rose-600 dark:text-rose-400" : ""}`}
-                          >
-                            {currentItem?.unidad || "—"}
-                          </div>
-                          {unidadError && (
-                            <p className="text-[10px] text-rose-600 dark:text-rose-400">
-                              {unidadError.message}
                             </p>
                           )}
                         </div>

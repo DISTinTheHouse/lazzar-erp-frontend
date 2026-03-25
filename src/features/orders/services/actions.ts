@@ -1,5 +1,5 @@
 import { v1_api } from "@/src/api/v1.api";
-import { Order, OrderCreate, OrderProductDetailCreate } from "../interfaces/order.interface";
+import { Order, OrderCreate, OrderOnboardingData } from "../interfaces/order.interface";
 
 
 export const getOrders = async (): Promise<Order[]> => {
@@ -7,8 +7,8 @@ export const getOrders = async (): Promise<Order[]> => {
   return response.data;
 };
 
-export const createOrder = async (order: OrderCreate): Promise<Order> => {
-  const response = await v1_api.post<Order>("/ventas/pedidos/", order);
+export const createOrder = async (order: OrderCreate): Promise<OrderCreate> => {
+  const response = await v1_api.post<OrderCreate>("/ventas/cotizaciones/onboarding/", order);
   return response.data;
 };
 
@@ -17,12 +17,7 @@ export const updateOrder = async (order: Order): Promise<Order> => {
   return response.data;
 };
 
-export const getOrderProductDetails = async (): Promise<OrderProductDetailCreate[]> => {
-  const response = await v1_api.get<OrderProductDetailCreate[]>(`/ventas/pedido-detalle/`);
-  return response.data;
-};
-
-export const createOrderProductDetail = async (orderProductDetail: OrderProductDetailCreate): Promise<OrderProductDetailCreate> => {
-  const response = await v1_api.post<OrderProductDetailCreate>("/ventas/pedido-detalle/", orderProductDetail);
+export const getOrderOnboardingData = async (): Promise<OrderOnboardingData> => {
+  const response = await v1_api.get<OrderOnboardingData>("/ventas/cotizaciones/onboarding/");
   return response.data;
 };

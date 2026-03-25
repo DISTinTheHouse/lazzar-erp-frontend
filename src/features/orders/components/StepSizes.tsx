@@ -4,7 +4,6 @@ import type { Size } from "../../sizes/interfaces/size.interface";
 interface StepSizesProps {
   selectedRow: CatalogRow | null;
   sizes: Size[];
-  isLoadingSizes: boolean;
   mergedSizeQuantities: Record<number, number>;
   updateSizeQuantity: (sizeId: number, value: number) => void;
   totalCantidad: number;
@@ -15,7 +14,6 @@ interface StepSizesProps {
 export function StepSizes({
   selectedRow,
   sizes,
-  isLoadingSizes,
   mergedSizeQuantities,
   updateSizeQuantity,
   totalCantidad,
@@ -30,9 +28,6 @@ export function StepSizes({
             <div>
               <p className="text-sm font-semibold text-slate-800 dark:text-white">
                 {selectedRow.nombre}
-              </p>
-              <p className="text-xs text-slate-500 dark:text-slate-300">
-                {selectedRow.unidad}
               </p>
             </div>
             <div className="text-right">
@@ -65,9 +60,7 @@ export function StepSizes({
           </div>
         </div>
 
-        {isLoadingSizes ? (
-          <div className="text-sm text-slate-500 dark:text-slate-400">Cargando tallas...</div>
-        ) : sizes.length === 0 ? (
+        {sizes.length === 0 ? (
           <div className="text-sm text-slate-500 dark:text-slate-400">
             No hay tallas disponibles.
           </div>

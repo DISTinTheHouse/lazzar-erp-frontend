@@ -2,8 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { FormInput } from "@/src/components/FormInput";
-import { Customer } from "@/src/features/customers/interfaces/customer.interface";
+import type { OrderOnboardingData } from "../interfaces/order.interface";
 import type { FormFieldError } from "@/src/utils/getFieldError";
+
+type Customer = OrderOnboardingData["busqueda"]["clientes"][number];
 
 interface CustomerSearchDropdownProps {
   value: string;

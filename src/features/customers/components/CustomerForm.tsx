@@ -12,12 +12,14 @@ interface CustomerFormProps {
   onSuccess?: () => void;
   onCreated?: (customer: Customer) => void;
   customerToEdit?: Customer | null;
+  invalidateOrderOnboarding?: boolean;
 }
 
 export default function CustomerForm({
   onSuccess,
   onCreated,
   customerToEdit,
+  invalidateOrderOnboarding = false,
 }: CustomerFormProps) {
   // El custom hook concentra estado, validación Zod, submit y reset del formulario.
   const {
@@ -38,6 +40,7 @@ export default function CustomerForm({
     onSuccess,
     onCreated,
     customerToEdit,
+    invalidateOrderOnboarding,
   });
 
   if (isSatInfoLoading) {

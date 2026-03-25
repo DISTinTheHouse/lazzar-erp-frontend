@@ -14,6 +14,7 @@ interface UseCustomerFormParams {
   onSuccess?: () => void;
   onCreated?: (customer: Customer) => void;
   customerToEdit?: Customer | null;
+  invalidateOrderOnboarding?: boolean;
 }
 
 type CustomerFormField = keyof CustomerFormValues;
@@ -40,6 +41,7 @@ export function useCustomerForm({
   onSuccess,
   onCreated,
   customerToEdit,
+  invalidateOrderOnboarding = false,
 }: UseCustomerFormParams) {
   // Contexto de empresa activa y catálogos SAT requeridos por el formulario.
   const selectedCompany = useWorkspaceStore((state) => state.selectedCompany);
@@ -90,7 +92,10 @@ export function useCustomerForm({
     setServerErrors((prev) => ({ ...prev, [field]: error.message as string }));
   }) as never;
 
-  const { mutateAsync: createCustomer, isPending: isCreating } = useCreateCustomer(setHookError);
+  const { mutateAsync: createCustomer, isPending: isCreating } = useCreateCustomer({
+    setError: setHookError,
+    invalidateOrderOnboarding,
+  });
   const { mutateAsync: updateCustomer, isPending: isUpdating } = useUpdateCustomer(setHookError);
 
   // Limpia errores locales de un campo específico.
