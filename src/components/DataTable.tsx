@@ -364,7 +364,7 @@ export function DataTable<TData, TValue>({
 
       {visibleRows.length > 0 ? (
         <div className="w-full rounded-2xl border border-slate-200 dark:border-white/20 shadow-sm">
-          <div className="h-90 overflow-x-auto [scrollbar-gutter:stable] rounded-2xl max-w-full">
+          <div className="h-120 overflow-x-auto [scrollbar-gutter:stable] rounded-2xl max-w-full">
             <table
               className="min-w-full text-left border-collapse bg-white dark:bg-black table-fixed"
               style={{ width: table.getTotalSize() }}
