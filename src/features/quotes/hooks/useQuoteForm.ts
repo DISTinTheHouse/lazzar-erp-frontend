@@ -8,6 +8,8 @@ import type { FormEventHandler } from "react";
 import toast from "react-hot-toast";
 import type { Customer } from "../../customers/interfaces/customer.interface";
 import { useCurrencies } from "../../currency/hooks/useCurrencies";
+import { useCustomerAddresses } from "../../customers/hooks/useCustomerAddresses";
+import type { CustomerAddress } from "../../customers/interfaces/customer-address.interface";
 import type { FormFieldError } from "../../../utils/getFieldError";
 import {
   quoteFormSchema,
@@ -311,6 +313,8 @@ export function useQuoteForm() {
   const [isCreationSuccessVisible, setIsCreationSuccessVisible] = useState(false);
   const [isRouteTransitioning, setIsRouteTransitioning] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState(0);
+  // Indica si el cliente fue seleccionado mediante el buscador (no mediante creación).
+  const [customerSelectedFromSearch, setCustomerSelectedFromSearch] = useState(false);
   const [extraServices, setExtraServices] = useState<ExtraService[]>([]);
   // Estado del diálogo de edición de bordado por partida.
   const [embroideryEditIndex, setEmbroideryEditIndex] = useState<number | null>(null);
@@ -321,6 +325,12 @@ export function useQuoteForm() {
   // Estado del diálogo de edición de tallas por partida.
   const [sizesEditIndex, setSizesEditIndex] = useState<number | null>(null);
   const [isSizesEditOpen, setIsSizesEditOpen] = useState(false);
+
+  // Obtiene las direcciones de envío del cliente seleccionado (solo si fue buscado, no creado).
+  const { addresses: customerAddresses } = useCustomerAddresses({
+    customerId: selectedCustomerId,
+    enabled: customerSelectedFromSearch && selectedCustomerId > 0,
+  });
 
   const showForm = true;
 
@@ -849,7 +859,21 @@ export function useQuoteForm() {
     }
   }, []);
 
-  const handleSelectCustomer = useCallback((customer: OnboardingCustomer) => {
+  // Autocompleta los campos de envío a partir de una dirección guardada del cliente.
+  const handleSelectShippingAddress = useCallback((address: CustomerAddress) => {
+    form.setFieldValue("destinatario", address.destinatario ?? "");
+    form.setFieldValue("empresaEnvio", address.empresa_envio ?? "");
+    form.setFieldValue("telefonoEnvio", address.telefono_envio ?? "");
+    form.setFieldValue("celularEnvio", address.celular_envio ?? "");
+    form.setFieldValue("direccionEnvio", address.direccion_envio ?? "");
+    form.setFieldValue("coloniaEnvio", address.colonia_envio ?? "");
+    form.setFieldValue("codigoPostalEnvio", address.codigo_postal ?? "");
+    form.setFieldValue("ciudadEnvio", address.ciudad_envio ?? "");
+    form.setFieldValue("estadoEnvio", address.estado_envio ?? "");
+    form.setFieldValue("referenciasEnvio", address.referencias ?? "");
+  }, [form]);
+
+  const handleSelectCustomer = useCallback((customer: OnboardingCustomer, fromSearch = true) => {
     // Hidrata facturación, contacto y envío al seleccionar cliente.
     const selectedRegimen = onboardingData?.catalogos.regimenes_fiscales.find(
       (item) => item.value === String(customer.sat_regimen_fiscal_id)
@@ -870,6 +894,7 @@ export function useQuoteForm() {
     form.setFieldValue("estadoFiscal", customer.estado ?? "");
     form.setFieldValue("giroEmpresa", customer.giro_empresarial ?? "");
     setSelectedCustomerId(Number(customer.id) || 0);
+    setCustomerSelectedFromSearch(fromSearch);
     form.setFieldValue("telefono_pagos", customer.telefono ?? "");
     form.setFieldValue("correo_facturas", customer.correo ?? "");
     form.setFieldValue("enviarDomicilioFiscal", true);
@@ -883,7 +908,7 @@ export function useQuoteForm() {
     form.setFieldValue("ciudadEnvio", customer.ciudad ?? "");
     form.setFieldValue("estadoEnvio", customer.estado ?? "");
     clearFieldErrors("clienteBusqueda");
-  }, [clearFieldErrors, form, onboardingData?.catalogos.regimenes_fiscales]);
+  }, [clearFieldErrors, form, onboardingData?.catalogos.regimenes_fiscales, setCustomerSelectedFromSearch]);
 
   // Callback de alta de cliente desde modal.
   const handleCustomerCreated = (customer?: Customer) => {
@@ -898,6 +923,7 @@ export function useQuoteForm() {
     const regimenDescripcion = satRegimen?.descripcion ?? "";
     handleSelectCustomer({
       id: Number(customer.id),
+      // fromSearch: false — cliente recién creado, sin direcciones guardadas
       razon_social: customer.razon_social,
       nombre: customer.nombre,
       rfc: customer.rfc,
@@ -912,7 +938,7 @@ export function useQuoteForm() {
       sat_regimen_fiscal_id: Number(customer.sat_regimen_fiscal),
       sat_regimen_fiscal__codigo: regimenCodigo,
       sat_regimen_fiscal__descripcion: regimenDescripcion,
-    });
+    }, false);
   };
 
   // Submit controlado para evitar dobles envíos y estados pendientes colgados.
@@ -934,6 +960,7 @@ export function useQuoteForm() {
     form.reset(emptyValues);
     setExtraServices([]);
     setSelectedCustomerId(0);
+    setCustomerSelectedFromSearch(false);
     setErrorTree({});
     form.setFieldValue("clienteBusqueda", "");
     toast.success("Formulario restablecido");
@@ -1104,6 +1131,8 @@ export function useQuoteForm() {
     customers,
     handleSelectCustomer,
     handleCustomerCreated,
+    customerAddresses,
+    handleSelectShippingAddress,
     extraServices,
     setExtraServices,
     embroideryEditIndex,

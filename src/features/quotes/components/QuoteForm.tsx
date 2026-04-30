@@ -99,6 +99,8 @@ export default function QuoteForm() {
     openSizesEdit,
     handleSizesEditSave,
     handleSizesEditOpenChange,
+    customerAddresses,
+    handleSelectShippingAddress,
   } = useQuoteForm();
 
   // Estado de carga del formulario
@@ -748,6 +750,37 @@ export default function QuoteForm() {
             </div>
           </div>
           <div className="flex flex-wrap gap-3">
+              {/* Selector de direcciones guardadas del cliente — visible solo cuando hay cliente con direcciones */}
+              {hasCustomerSelected && customerAddresses.length > 0 && (
+                <div className="w-56">
+                  <FormSelect
+                    key={watchedEnviarDomicilioFiscal ? "fiscal-active" : "custom"}
+                    label=""
+                    disabled={Boolean(watchedEnviarDomicilioFiscal)}
+                    className="py-2! text-xs!"
+                    onChange={(event) => {
+                      const addressId = Number(event.target.value);
+                      if (!addressId) return;
+                      const selected = customerAddresses.find((a) => a.id === addressId);
+                      if (selected) handleSelectShippingAddress(selected);
+                    }}
+                    defaultValue=""
+                  >
+                    <option value="" disabled>
+                      Dirección guardada...
+                    </option>
+                    {customerAddresses
+                      .filter((a) => a.activo)
+                      .map((addr) => (
+                        <option key={addr.id} value={addr.id}>
+                          {addr.destinatario
+                            ? `${addr.destinatario} — ${addr.direccion_envio}`
+                            : addr.direccion_envio}
+                        </option>
+                      ))}
+                  </FormSelect>
+                </div>
+              )}
             <form.Field name="enviarDomicilioFiscal">
               {(field) => (
                 <label className={`inline-flex items-center gap-2 text-xs font-medium transition-opacity ${
