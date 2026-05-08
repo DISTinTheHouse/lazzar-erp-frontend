@@ -118,6 +118,9 @@ export interface QuoteById {
     cotizacion: number;
     producto: number;
     producto_nombre: string;
+    color: number | null;
+    color_nombre: string | null;
+    color_codigo_hex: string | null;
   }[];
   cliente_nombre: string;
   cliente_razon_social: string;

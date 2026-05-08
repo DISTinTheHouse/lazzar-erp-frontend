@@ -53,8 +53,20 @@ export const QuoteDetailsProducts = ({ details }: QuoteDetailsProductsProps) => 
           >
             <div className="px-4 py-3 border-b border-slate-200 dark:border-white/10 flex flex-wrap items-center justify-between gap-3">
               <div className="space-y-1">
-                <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                  {detalle.producto_nombre}
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                    {detalle.producto_nombre}
+                  </div>
+                  {detalle.color_nombre && detalle.color_codigo_hex && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 px-2.5 py-0.5 text-xs font-medium text-slate-700 dark:text-slate-300 shadow-sm">
+                      <span
+                        className="h-3 w-3 shrink-0 rounded-full ring-1 ring-black/10 dark:ring-white/10"
+                        style={{ backgroundColor: detalle.color_codigo_hex }}
+                        aria-hidden="true"
+                      />
+                      {detalle.color_nombre}
+                    </span>
+                  )}
                 </div>
                 <div className="text-xs text-slate-500 dark:text-slate-400">
                   Subtotal línea:{" "}
