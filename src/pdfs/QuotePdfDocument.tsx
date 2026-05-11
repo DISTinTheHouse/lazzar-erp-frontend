@@ -106,7 +106,7 @@ export const QuotePdfDocument = ({ quote, model }: QuotePdfDocumentProps) => {
           {/* Encabezado de la tabla — se repite en cada página */}
           <View style={s.tableHeader} fixed>
             <Text style={[s.tableHeaderCell, s.colProduct]}>Producto</Text>
-            <Text style={[s.tableHeaderCell, s.colSizes]}>Tallas</Text>
+            <Text style={[s.tableHeaderCell, s.colSizes]}>SKU</Text>
             <Text style={[s.tableHeaderCell, s.colQty]}>Pzas.</Text>
             <Text style={[s.tableHeaderCell, s.colPrice]}>Precio u.</Text>
             <Text style={[s.tableHeaderCell, s.colSubtotal]}>Subtotal</Text>
@@ -122,7 +122,7 @@ export const QuotePdfDocument = ({ quote, model }: QuotePdfDocumentProps) => {
                 {/* Fila principal del producto */}
                 <View style={[s.tableRow, i % 2 !== 0 ? s.tableRowAlt : {}]} wrap={false}>
                   <Text style={[s.tableCellBold, s.colProduct]}>{detail.producto_nombre}</Text>
-                  <Text style={[s.tableCell, s.colSizes]}>{model.sizesSummaries[i]}</Text>
+                  <Text style={[s.tableCell, s.colSizes]}>{model.skuSummaries[i]}</Text>
                   <Text style={[s.tableCell, s.colQty]}>{quantity}</Text>
                   <Text style={[s.tableCell, s.colPrice]}>
                     {model.formatMoney(Number(detail.precio_unitario))}

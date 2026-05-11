@@ -18,7 +18,7 @@ import {
   toCurrencyOrDash,
   toDisplayValue,
 } from "@/src/features/quotes/utils/quoteDetailsFormatters";
-import { buildQuoteEmailTemplateModel, getQuoteDetailSizesSummary } from "@/src/features/quotes/utils/quoteEmailTemplateHelpers";
+import { buildQuoteEmailTemplateModel, getQuoteDetailSkuSummary } from "@/src/features/quotes/utils/quoteEmailTemplateHelpers";
 import { OPCION_LABEL, POSICION_LABEL, TIPO_LABEL } from "@/src/features/quotes/utils/reflective-labels";
 
 type QuoteEmailProps = {
@@ -96,7 +96,7 @@ export const QuoteEmail = ({ quote }: QuoteEmailProps) => {
                 <thead>
                   <tr className="border-b border-slate-200 text-xs uppercase tracking-[0.16em] text-slate-500">
                     <th className="py-3 pr-3 font-semibold">Producto</th>
-                    <th className="py-3 pr-3 font-semibold">Tallas</th>
+                    <th className="py-3 pr-3 font-semibold">SKU</th>
                     <th className="py-3 pr-3 font-semibold text-right">Piezas</th>
                     <th className="py-3 pr-3 font-semibold text-right">Precio</th>
                     <th className="py-3 font-semibold text-right">Subtotal</th>
@@ -120,7 +120,7 @@ export const QuoteEmail = ({ quote }: QuoteEmailProps) => {
                             </Text>
                           </td>
                           <td className="py-4 pr-3 align-top text-slate-600">
-                            {getQuoteDetailSizesSummary(detail)}
+                            {getQuoteDetailSkuSummary(detail)}
                           </td>
                           <td className="py-4 pr-3 text-right align-top text-slate-900">{quantity}</td>
                           <td className="py-4 pr-3 text-right align-top text-slate-900">

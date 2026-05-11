@@ -291,13 +291,23 @@ export const QuoteDetails = ({ quoteId }: QuoteDetailsProps) => {
         <div className="rounded-xl border border-slate-200 dark:border-white/10 p-4 bg-white dark:bg-white/5 space-y-3">
           <p className="text-xs uppercase text-slate-400 font-semibold">Servicios y cargos</p>
           {quote.servicios_extras.length > 0 ? (
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              {quote.servicios_extras.map((servicio) => (
-                <React.Fragment key={servicio.id}>
-                  <p className="text-slate-700 dark:text-slate-300">{servicio.nombre}</p>
-                  <p className="text-right text-slate-800 dark:text-slate-100 font-medium">{toCurrencyOrDash(servicio.monto)}</p>
-                </React.Fragment>
-              ))}
+            <div className="divide-y divide-slate-100 dark:divide-white/5 text-sm">
+              {quote.servicios_extras.map((servicio) => {
+                const total = Number(servicio.cantidad) * Number(servicio.monto);
+                return (
+                  <div key={servicio.id} className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0">
+                    <p className="text-slate-700 dark:text-slate-300 min-w-0 truncate">{servicio.nombre}</p>
+                    <div className="flex items-center gap-2 shrink-0 text-right">
+                      <span className="text-xs text-slate-400 dark:text-slate-500 whitespace-nowrap">
+                        {servicio.cantidad} × {toCurrencyOrDash(servicio.monto)}
+                      </span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-100 whitespace-nowrap">
+                        {toCurrencyOrDash(total)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <p className="text-sm text-slate-400 dark:text-slate-500">Sin servicios extras</p>

@@ -127,6 +127,7 @@ export const QuoteDetailsProducts = ({ details }: QuoteDetailsProductsProps) => 
                   <table className="min-w-full text-xs">
                     <thead className="bg-slate-50 dark:bg-white/5">
                       <tr className="text-slate-500 dark:text-slate-400">
+                        <th className="px-3 py-2 text-left font-semibold">SKU</th>
                         <th className="px-3 py-2 text-left font-semibold">Talla</th>
                         <th className="px-3 py-2 text-left font-semibold">Cantidad</th>
                         <th className="px-3 py-2 text-left font-semibold">Precio Unitario</th>
@@ -139,6 +140,7 @@ export const QuoteDetailsProducts = ({ details }: QuoteDetailsProductsProps) => 
                     <tbody>
                       {detalle.tallas.map((talla) => (
                         <tr key={talla.id} className="border-t border-slate-100 dark:border-white/10">
+                          <td className="px-3 py-2 font-mono text-xs text-slate-500 dark:text-slate-400">{talla.sku || "-"}</td>
                           <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{talla.talla_nombre}</td>
                           <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{talla.cantidad}</td>
                           <td className="px-3 py-2 text-slate-700 dark:text-slate-200">

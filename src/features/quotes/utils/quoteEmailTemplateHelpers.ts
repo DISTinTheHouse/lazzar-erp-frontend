@@ -40,6 +40,12 @@ export const getQuoteDetailSizesSummary = (detail: QuoteById["detalles"][number]
   return sizes || "-";
 };
 
+/** Recopila los SKUs únicos del detalle para mostrarlo en la tabla del correo/PDF. */
+export const getQuoteDetailSkuSummary = (detail: QuoteById["detalles"][number]) => {
+  const skus = [...new Set(detail.tallas.map((t) => t.sku).filter(Boolean))];
+  return skus.length > 0 ? skus.join(", ") : "-";
+};
+
 /** Construye una direccion de envio legible concatenando solo las partes disponibles. */
 export const getQuoteShippingAddress = (quote: QuoteById) => {
   const parts = [

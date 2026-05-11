@@ -7,7 +7,7 @@ import type { QuoteById } from "../interfaces/quote.interface";
 import {
   buildQuoteEmailDetailRows,
   getQuoteComputedSubtotal,
-  getQuoteDetailSizesSummary,
+  getQuoteDetailSkuSummary,
   getQuoteTotalPieces,
   getQuoteShippingAddress,
 } from "./quoteEmailTemplateHelpers";
@@ -118,7 +118,7 @@ export type QuotePdfModel = {
   totalPieces: number;
   shippingAddress: string;
   detailRows: QuoteEmailDetailRow[];
-  sizesSummaries: string[];
+  skuSummaries: string[];
   computedSubtotal: number;
   /** Addons por índice, alineado con detailRows. */
   detailAddons: PdfDetailAddons[];
@@ -135,7 +135,7 @@ export const buildQuotePdfModel = (quote: QuoteById): QuotePdfModel => {
     totalPieces: getQuoteTotalPieces(quote),
     shippingAddress: getQuoteShippingAddress(quote),
     detailRows,
-    sizesSummaries: detailRows.map(({ detail }) => getQuoteDetailSizesSummary(detail)),
+    skuSummaries: detailRows.map(({ detail }) => getQuoteDetailSkuSummary(detail)),
     computedSubtotal: getQuoteComputedSubtotal(detailRows),
     detailAddons: detailRows.map(({ detail }) => buildPdfDetailAddons(detail)),
     formatMoney: (amount) => formatCurrency(amount),

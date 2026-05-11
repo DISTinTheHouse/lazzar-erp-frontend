@@ -88,6 +88,7 @@ export interface QuoteById {
     id: number;
     tallas: {
       id: number;
+      sku: string;
       talla_nombre: string;
       cantidad: number;
       precio_unitario: string;
