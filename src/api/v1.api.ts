@@ -20,6 +20,8 @@ const v1_api = axios.create({
 let isRefreshing = false;
 let refreshQueue: Array<(error?: Error) => void> = [];
 
+let isSigningOut = false;
+
 // Notifica a todas las solicitudes encoladas el resultado del refresh
 const notifyQueue = (error?: Error): void => {
   refreshQueue.forEach((cb) => cb(error));
@@ -52,7 +54,8 @@ v1_api.interceptors.response.use(
 
     // El retry también falló con 401 → sesión inválida, cerrar sesión
     if (originalRequest._retry) {
-      if (typeof window !== "undefined") {
+      if (typeof window !== "undefined" && !isSigningOut) {
+        isSigningOut = true;
         await signOut({ callbackUrl: "/auth/login" });
       }
       return Promise.reject(error);
@@ -83,7 +86,8 @@ v1_api.interceptors.response.use(
 
     } catch { // El refresh falló → cerrar sesión
       notifyQueue(new Error("Refresh fallido"));
-      if (typeof window !== "undefined") {
+      if (typeof window !== "undefined" && !isSigningOut) {
+        isSigningOut = true;
         await signOut({ callbackUrl: "/auth/login" });
       }
       return Promise.reject(error);

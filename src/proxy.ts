@@ -3,10 +3,18 @@ import { NextResponse } from "next/server";
 import { hasPermission } from "./utils/permissions";
 import { routePermissions } from "./constants/routePermissions";
 
-
-
+/**
+ * Proxy de autenticación y autorización (Next.js 16 — antes "middleware").
+ *
+ * Se pasa explícitamente el `secret` para garantizar que `withAuth` use la
+ * misma clave que `getServerSession(authOptions)` en los Server Components.
+ * Sin esto, si `NEXTAUTH_SECRET` no está definido en el entorno, el proxy
+ * intenta verificar el JWT con `undefined` mientras que `getServerSession`
+ * usa el fallback "secreto-super-seguro-para-desarrollo", lo que provoca un
+ * ciclo infinito de redirecciones: proxy → /auth/login → layout → / → proxy.
+ */
 export default withAuth(
-  function middleware(req) {
+  function proxy(req) {
 
     const hasWorkspace = req.cookies.has("erp_workspace_id"); // Verificar si hay workspace seleccionado
     const isSelectBranchPage = req.nextUrl.pathname.startsWith("/select-branch"); // Verificar si es la página de selección de sucursal
@@ -36,6 +44,8 @@ export default withAuth(
     return NextResponse.next();
   },
   {
+    // Usar el mismo secret que authOptions para evitar discrepancias en la verificación del JWT
+    secret: process.env.NEXTAUTH_SECRET || "secreto-super-seguro-para-desarrollo",
     pages: {
       signIn: "/auth/login",
     },
