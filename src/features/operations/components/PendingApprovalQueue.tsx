@@ -3,13 +3,11 @@
 import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 import { useQuotes } from "@/src/features/quotes/hooks/useQuotes";
 import { useApproveQuote } from "@/src/features/operations/hooks/useApproveQuote";
 import { useRejectQuote } from "@/src/features/operations/hooks/useRejectQuote";
 import { formatCurrency } from "@/src/utils/formatCurrency";
 import { formatQuoteDateTime } from "@/src/features/quotes/utils/quoteDetailsFormatters";
-import { hasPermission } from "@/src/utils/permissions";
 import {
   CheckCircleIcon,
   RejectIcon,
@@ -60,12 +58,8 @@ const MAX_VISIBLE = 6;
 // ─── Componente ───────────────────────────────────────────────────────────────
 export const PendingApprovalQueue = () => {
   const { quotes, isLoading } = useQuotes();
-  const { data: session } = useSession();
   const approveQuote = useApproveQuote();
   const rejectQuote = useRejectQuote();
-
-  // Permisos — visible solo para R-MESACONTROL o admin
-  const canManageAuthorization = hasPermission("R-MESACONTROL", session?.user);
 
   // IDs de cotizaciones con mutación en vuelo
   const [processingIds, setProcessingIds] = useState<Set<number>>(new Set());
@@ -306,27 +300,6 @@ export const PendingApprovalQueue = () => {
         >
           <QuoteDetails quoteId={viewQuote.id} />
 
-          {/* ── Botones de autorización dentro del modal (solo R-MESACONTROL) ── */}
-          {canManageAuthorization && viewQuote.estatus === 2 && (
-            <div className="mt-6 pt-5 border-t border-slate-100 dark:border-white/10 flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => handleRequestAction("reject", viewQuote)}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 border border-rose-200 dark:border-rose-500/20 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 cursor-pointer"
-              >
-                <RejectIcon className="w-4 h-4" />
-                Rechazar
-              </button>
-              <button
-                type="button"
-                onClick={() => handleRequestAction("approve", viewQuote)}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-500/25 border border-emerald-700 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 cursor-pointer"
-              >
-                <CheckCircleIcon className="w-4 h-4" />
-                Autorizar
-              </button>
-            </div>
-          )}
         </MainDialog>
       )}
 

@@ -13,6 +13,8 @@ interface MainDialogProps {
   maxWidth?: string;
   actionButton?: React.ReactNode; // Botón de acción principal opcional (ej: Guardar)
   actionButtonClose?: boolean;
+  /** Muestra u oculta el botón rojo "Cerrar" en el pie del diálogo. Por defecto: true. */
+  showCloseButton?: boolean;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
@@ -25,6 +27,7 @@ export function MainDialog({
   maxWidth = "450px",
   actionButton,
   actionButtonClose = true,
+  showCloseButton = true,
   open,
   onOpenChange,
 }: MainDialogProps) {
@@ -61,13 +64,13 @@ export function MainDialog({
         {children}
 
         <Flex gap="3" mt="4" justify="end">
-          <Dialog.Close>
-            <Button
-              variant="danger"
-            >
-              Cerrar
-            </Button>
-          </Dialog.Close>
+          {showCloseButton && (
+            <Dialog.Close>
+              <Button variant="danger">
+                Cerrar
+              </Button>
+            </Dialog.Close>
+          )}
           {actionButton &&
             (actionButtonClose ? (
               <Dialog.Close>{actionButton}</Dialog.Close>

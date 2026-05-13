@@ -59,6 +59,7 @@ export function EditReflectiveDialog({
       open={open}
       onOpenChange={handleOpenChange}
       actionButtonClose={false}
+      showCloseButton={false}
       title={
         <span className="flex items-center gap-2">
           <EditIcon className="w-4 h-4 text-sky-500" aria-hidden="true" />
