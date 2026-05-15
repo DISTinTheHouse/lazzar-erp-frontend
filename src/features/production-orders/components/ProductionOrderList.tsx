@@ -2,41 +2,45 @@
 
 import { useMemo, useState } from "react";
 import { DataTable } from "@/src/components/DataTable";
-import { getCedicorNewDevelopmentColumns } from "./CedicorNewDevelopmentColumns";
-import { MOCK_CEDICOR_NEW_DEVELOPMENT } from "../mocks/cedicor-new-development.mock";
+import { getProductionOrderColumns } from "./ProductionOrderColumns";
+import { MOCK_PRODUCTION_ORDERS } from "../mocks/production-order.mock";
 import {
-  FLOW_STEPS,
-  FLOW_STATUS_LABELS,
-  type FlowStatus,
-} from "../interfaces/cedicor-new-development.interface";
+  PRODUCTION_ORDER_STEPS,
+  PRODUCTION_ORDER_STATUS_LABELS,
+  type ProductionOrderStatus,
+} from "../interfaces/production-order.interface";
 
-// Tipo ampliado para el valor del filtro
-type FiltroEstatus = FlowStatus | 'todas';
+// Valor posible para el filtro de pestañas (incluye estados especiales y "todas")
+type ProductionOrderFilterValue = ProductionOrderStatus | 'todas';
 
-// Pestañas de filtro — "Todas", cada paso del flujo, material_faltante y cancelados
-const FILTROS: { value: FiltroEstatus; label: string }[] = [
-  { value: 'todas',             label: 'Todas' },
-  ...FLOW_STEPS.map((s, i) => ({
-    value: s as FlowStatus,
-    label: `${i + 1}. ${FLOW_STATUS_LABELS[s]}`,
+// Pestañas de filtro — "Todas", cada paso canónico, estados especiales y canceladas
+const FILTROS: { value: ProductionOrderFilterValue; label: string }[] = [
+  { value: 'todas',                label: 'Todas' },
+  ...PRODUCTION_ORDER_STEPS.map((s) => ({
+    value:  s as ProductionOrderStatus,
+    label:  PRODUCTION_ORDER_STATUS_LABELS[s],
   })),
-  { value: 'material_faltante', label: 'Material Faltante' },
-  { value: 'cancelado',         label: 'Cancelados' },
+  { value: 'material_faltante',    label: 'Material Faltante' },
+  { value: 'comprando_materiales', label: 'Comprando Materiales' },
+  { value: 'cancelada',            label: 'Canceladas' },
 ];
 
-/** Lista principal de órdenes de Nuevo Desarrollo de Producto */
-export function CedicorNewDevelopmentList() {
-  const [filtroEstatus, setFiltroEstatus] = useState<FiltroEstatus>('todas');
+const FILTRO_DEFAULT_ACTIVE = 'bg-sky-600 text-white';
 
-  const columns = useMemo(() => getCedicorNewDevelopmentColumns(), []);
+
+/** Lista principal de órdenes de producción */
+export function ProductionOrderList() {
+  const [filtroEstatus, setFiltroEstatus] = useState<ProductionOrderFilterValue>('todas');
+
+  const columns = useMemo(() => getProductionOrderColumns(), []);
 
   const ordenesFiltradas = useMemo(() => {
-    if (filtroEstatus === 'todas') return MOCK_CEDICOR_NEW_DEVELOPMENT;
-    return MOCK_CEDICOR_NEW_DEVELOPMENT.filter((o) => o.estatus === filtroEstatus);
+    if (filtroEstatus === 'todas') return MOCK_PRODUCTION_ORDERS;
+    return MOCK_PRODUCTION_ORDERS.filter((o) => o.estatus === filtroEstatus);
   }, [filtroEstatus]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
 
       {/* ── Filtros de estatus / paso del flujo ──────────────────────── */}
       <div
@@ -47,11 +51,13 @@ export function CedicorNewDevelopmentList() {
         {FILTROS.map((f) => {
           const count =
             f.value === 'todas'
-              ? MOCK_CEDICOR_NEW_DEVELOPMENT.length
-              : MOCK_CEDICOR_NEW_DEVELOPMENT.filter((o) => o.estatus === f.value).length;
-          const isActive = filtroEstatus === f.value;
+              ? MOCK_PRODUCTION_ORDERS.length
+              : MOCK_PRODUCTION_ORDERS.filter((o) => o.estatus === f.value).length;
 
           if (count === 0 && f.value !== 'todas') return null;
+
+          const isActive = filtroEstatus === f.value;
+          const activeCls = FILTRO_DEFAULT_ACTIVE;
 
           return (
             <button
@@ -61,7 +67,7 @@ export function CedicorNewDevelopmentList() {
               aria-pressed={isActive}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
                 isActive
-                  ? 'bg-sky-600 text-white shadow-sm'
+                  ? `${activeCls} shadow-sm`
                   : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'
               }`}
             >
@@ -84,11 +90,9 @@ export function CedicorNewDevelopmentList() {
       <DataTable
         columns={columns}
         data={ordenesFiltradas}
-        baseDataCount={MOCK_CEDICOR_NEW_DEVELOPMENT.length}
-        searchPlaceholder="Buscar folio, cliente, producto…"
+        baseDataCount={MOCK_PRODUCTION_ORDERS.length}
+        searchPlaceholder="Buscar folio, producto, área…"
       />
     </div>
   );
 }
-
-

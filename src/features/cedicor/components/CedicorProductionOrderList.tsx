@@ -38,24 +38,6 @@ export function CedicorProductionOrderList() {
   return (
     <div className="space-y-4">
 
-      {/* ── Encabezado con conteo global ─────────────────────────────── */}
-      <div className="flex flex-col gap-1">
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          {MOCK_CEDICOR_PRODUCTION_ORDERS.length} órdenes registradas · {' '}
-          <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-            {MOCK_CEDICOR_PRODUCTION_ORDERS.filter((o) => o.estatus === 'despachado_confeccion').length} completadas
-          </span>
-          {' · '}
-          <span className="text-orange-600 dark:text-orange-400 font-medium">
-            {MOCK_CEDICOR_PRODUCTION_ORDERS.filter((o) => o.estatus === 'material_faltante').length} con material faltante
-          </span>
-          {' · '}
-          <span className="text-red-500 dark:text-red-400 font-medium">
-            {MOCK_CEDICOR_PRODUCTION_ORDERS.filter((o) => o.estatus === 'cancelado').length} canceladas
-          </span>
-        </p>
-      </div>
-
       {/* ── Filtros de estatus / paso del flujo ──────────────────────── */}
       <div
         className="flex items-center gap-1.5 flex-wrap"

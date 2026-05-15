@@ -70,7 +70,6 @@ export function EmbroideryOrderList() {
       <DataTable
         columns={columns}
         data={ordenesFiltradas}
-        title="Órdenes de Bordado"
         searchPlaceholder="Buscar orden, pedido o cliente..."
         actionButton={
           <div className="flex items-center gap-2">

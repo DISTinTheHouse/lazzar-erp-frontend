@@ -27,6 +27,7 @@ import {
   EmailIcon,
   ScissorsIcon,
   FactoryIcon,
+  ProduccionIcon,
 } from "../components/Icons";
 
 export interface AppRouteItem {
@@ -213,6 +214,14 @@ export const appRouteGroups: AppRouteGroup[] = [
     moduleIcon: SettingsIcon,
     showInHome: true,
     items: [
+      {
+        key: "manufacturing-production-orders",
+        label: "Órdenes de Producción",
+        path: "/manufacturing/production-orders",
+        icon: ProduccionIcon,
+        description: "Gestión del flujo de órdenes de producción: verificación de materiales, fabricación, avances y cierre.",
+        permission: "R-PRODUCCION",
+      },
       {
         key: "manufacturing-embroidery",
         label: "Órdenes de Bordado",
