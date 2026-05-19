@@ -387,6 +387,7 @@ export function getReviewColumns(): ColumnDef<PurchaseOrderReview, unknown>[] {
     // ── Acciones ──────────────────────────────────────────────────────────
     col.display({
       id:   'acciones',
+      header: () => <div className="text-center">Acciones</div>,
       size: 60,
       cell: ({ row }) => {
         // eslint-disable-next-line react-hooks/rules-of-hooks

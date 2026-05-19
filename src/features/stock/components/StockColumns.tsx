@@ -96,7 +96,7 @@ export const stockColumns: ColumnDef<StockItem>[] = [
   },
   {
     id: "actions",
-    header: "",
+    header: () => <div className="text-center">Acciones</div>,
     size: 90,
     cell: ({ row }) => <ActionsCell stock={row.original} />,
   },

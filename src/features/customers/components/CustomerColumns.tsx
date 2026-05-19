@@ -105,7 +105,7 @@ export const getCustomerColumns = (
   },
   {
     id: "actions",
-    header: "",
+    header: () => <div className="text-center">Acciones</div>,
     size: 90,
     cell: ({ row }) => <ActionsCell customer={row.original} onEdit={onEdit} onAddAddress={onAddAddress} onViewAddresses={onViewAddresses} />,
   },

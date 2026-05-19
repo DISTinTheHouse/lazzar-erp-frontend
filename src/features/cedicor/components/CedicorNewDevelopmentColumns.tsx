@@ -418,7 +418,7 @@ export function getCedicorNewDevelopmentColumns(): ColumnDef<NewDevelopment>[] {
 
     col.display({
       id: 'acciones',
-      header: '',
+      header: () => <div className="text-center">Acciones</div>,
       meta: { label: 'Acciones' },
       cell: (info) => <ActionsCell row={info.row.original} />,
       size: 80,

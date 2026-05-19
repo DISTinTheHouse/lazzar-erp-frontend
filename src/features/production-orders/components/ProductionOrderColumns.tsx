@@ -391,7 +391,7 @@ export function getProductionOrderColumns(): ColumnDef<ProductionOrder, unknown>
     // Acciones
     columnHelper.display({
       id: 'acciones',
-      header: '',
+      header: () => <div className="text-center">Acciones</div>,
       size: 90,
       cell: ({ row }) => <ActionsCell row={row.original} />,
     }),
