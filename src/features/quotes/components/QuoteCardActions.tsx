@@ -7,6 +7,7 @@ import { ActionMenu, ActionMenuItem } from "@/src/components/ActionMenu";
 import { MainDialog } from "@/src/components/MainDialog";
 import { DialogHeader } from "@/src/components/DialogHeader";
 import { ConfirmDialog } from "@/src/components/ConfirmDialog";
+import { QuoteDetailsLoadingSkeleton } from "./QuoteDetailsLoadingSkeleton";
 import {
   CheckCircleIcon,
   DownloadIcon,
@@ -34,15 +35,7 @@ const QuoteDetails = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div
-        className="space-y-3"
-        role="status"
-        aria-live="polite"
-        aria-label="Cargando detalle de cotización"
-      >
-        <div className="h-16 rounded-xl bg-slate-200/70 dark:bg-white/10 animate-pulse" />
-        <div className="h-32 rounded-xl bg-slate-200/70 dark:bg-white/10 animate-pulse" />
-      </div>
+      <QuoteDetailsLoadingSkeleton ariaLabel="Cargando detalle de cotización" />
     ),
   }
 );

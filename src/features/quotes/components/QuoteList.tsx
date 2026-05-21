@@ -23,7 +23,7 @@ const QuoteFiltersDialog = lazy(() =>
 
 export const QuoteList = () => {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const { quotes, isLoading: isOrdersLoading } = useQuotes();
   const filtersHydrated = useQuoteFiltersStore((state) => state.hasHydrated);
   const [visibleOrders, setVisibleOrders] = useState<Quote[]>([]);
@@ -33,6 +33,7 @@ export const QuoteList = () => {
   const isRejectingOrder =
     useIsMutating({ mutationKey: rejectOperationsQuoteMutationKey }) > 0;
   const isUpdatingOrderStatus = isAuthorizingOrder || isRejectingOrder;
+  const isSessionLoading = sessionStatus === "loading";
   const canCreateOrder = hasPermission("R-CRM", session?.user);
   const baseOrders = quotes;
   const {
@@ -86,7 +87,11 @@ export const QuoteList = () => {
         loadingTitle={isRejectingOrder ? "Rechazando cotización" : "Autorizando cotización"}
         loadingMessage="Estamos actualizando el estado de la orden."
         actionButton={
-          canCreateOrder ? (
+          isSessionLoading ? (
+            <div className="w-44 shrink-0" aria-hidden="true">
+              <LoadingSkeleton className="h-10 rounded-xl" />
+            </div>
+          ) : canCreateOrder ? (
             <div className="flex items-center gap-2 shrink-0">
               <Link
                 href="/sales/quotes/new"

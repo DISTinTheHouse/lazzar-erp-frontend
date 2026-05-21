@@ -37,17 +37,29 @@ export const GoogleUpcomingEvents = () => {
 
   if (isLoading) {
     return (
-      <section className="bg-white dark:bg-black border border-slate-200 dark:border-white/10 rounded-xl shadow-sm p-6 space-y-4">
-        <div className="h-4 w-36 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className="h-9 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />
-        ))}
+      <section className="bg-white dark:bg-black border border-slate-200 dark:border-white/10 rounded-xl shadow-sm p-6 min-h-88 flex flex-col">
+        <div className="flex items-center justify-between gap-2 mb-6">
+          <div className="flex items-center gap-2">
+            <GoogleCalendarIcon className="w-4 h-4 shrink-0" aria-hidden="true" />
+            <h3 className="font-bold text-slate-800 dark:text-white text-sm">Próximos eventos</h3>
+          </div>
+          {!isCalendarPage && (
+            <div className="w-16" aria-hidden="true">
+              <div className="h-4 rounded-full bg-slate-200 dark:bg-slate-700 animate-pulse" />
+            </div>
+          )}
+        </div>
+        <div className="flex-1 space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="h-12 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
+          ))}
+        </div>
       </section>
     );
   }
 
   return (
-    <section className="bg-white dark:bg-black border border-slate-200 dark:border-white/10 rounded-xl shadow-sm p-6">
+    <section className="bg-white dark:bg-black border border-slate-200 dark:border-white/10 rounded-xl shadow-sm p-6 min-h-88 flex flex-col">
       <div className="flex items-center justify-between gap-2 mb-6">
         <div className="flex items-center gap-2">
           <GoogleCalendarIcon className="w-4 h-4 shrink-0" aria-hidden="true" />
@@ -66,9 +78,11 @@ export const GoogleUpcomingEvents = () => {
       </div>
 
       {upcomingEvents.length === 0 ? (
-        <EmptyUpcomingEvents />
+        <div className="flex-1">
+          <EmptyUpcomingEvents />
+        </div>
       ) : (
-        <div className="relative pl-4 border-l border-slate-200 dark:border-slate-800 space-y-6">
+        <div className="relative pl-4 border-l border-slate-200 dark:border-slate-800 space-y-6 flex-1">
           {upcomingEvents.map((event, index) => (
             <EventItem
               key={event.id}

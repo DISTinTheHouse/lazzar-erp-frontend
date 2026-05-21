@@ -34,6 +34,7 @@ export function ConfigContent() {
 
   const groupTopRef = useRef<HTMLDivElement | null>(null);
   const hasSearch = searchTerm.trim().length > 0;
+  const loadingGroups = availableGroups.length > 0 ? availableGroups : configGroups;
 
   // Scroll al grupo seleccionado cuando cambia
   useEffect(() => {
@@ -56,7 +57,7 @@ export function ConfigContent() {
    */
   if (status === "loading") {
     return (
-      <div className="w-full grid grid-cols-1">
+      <div className="w-full grid grid-cols-1 min-h-128">
         <div className="col-start-1 row-start-1 w-full">
           {/* Esqueleto de la barra de búsqueda */}
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -64,7 +65,7 @@ export function ConfigContent() {
           </div>
           {/* Esqueleto del grid de grupos — reserva el espacio exacto */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-            {configGroups.map((group) => (
+            {loadingGroups.map((group) => (
               <div
                 key={group.group}
                 className="cursor-pointer rounded-2xl bg-white dark:bg-black border border-slate-200 dark:border-white/10 p-6 sm:p-8 min-h-56"
@@ -79,7 +80,7 @@ export function ConfigContent() {
 
   return (
     <>
-      <div className="w-full grid grid-cols-1">
+      <div className="w-full grid grid-cols-1 min-h-128">
         {/* Grid View */}
         <div
           className={`
@@ -92,7 +93,7 @@ export function ConfigContent() {
           `}
         >
           {!selectedGroup ? (
-            <div className="w-full transition-all duration-500 ease-in-out">
+            <div className="w-full min-h-112 transition-all duration-500 ease-in-out">
               <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="relative w-full sm:w-80">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -162,7 +163,7 @@ export function ConfigContent() {
               )}
             </div>
           ) : (
-            <div className="w-full transition-all duration-500 ease-in-out" ref={groupTopRef}>
+            <div className="w-full min-h-112 transition-all duration-500 ease-in-out" ref={groupTopRef}>
               <div className="flex flex-col gap-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div className="flex items-center gap-3">

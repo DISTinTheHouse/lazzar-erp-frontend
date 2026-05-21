@@ -24,6 +24,7 @@ import {
 import {
   getStatusStyles as getOperationsQuoteStatusStyles,
 } from "../../quotes/utils/getStatusStyle";
+import { QuoteDetailsLoadingSkeleton } from "../../quotes/components/QuoteDetailsLoadingSkeleton";
 import { OperationsQuoteStockReviewDialog } from "./OperationsQuoteStockReviewDialog";
 import { useApproveOperationsQuote } from "../hooks/useApproveOperationsQuote";
 import { useRejectOperationsQuote } from "../hooks/useRejectOperationsQuote";
@@ -37,15 +38,7 @@ const OperationsQuoteDetails = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div
-        className="space-y-3"
-        role="status"
-        aria-live="polite"
-        aria-label="Cargando detalle de cotización operativa"
-      >
-        <div className="h-16 rounded-xl bg-slate-200/70 dark:bg-white/10 animate-pulse" />
-        <div className="h-32 rounded-xl bg-slate-200/70 dark:bg-white/10 animate-pulse" />
-      </div>
+      <QuoteDetailsLoadingSkeleton ariaLabel="Cargando detalle de cotización operativa" />
     ),
   }
 );

@@ -48,7 +48,7 @@ export const RecentActivityFeed = () => {
 
   return (
     <section
-      className="bg-white dark:bg-black border border-slate-200 dark:border-white/10 rounded-xl shadow-sm overflow-hidden flex flex-col"
+      className="bg-white dark:bg-black border border-slate-200 dark:border-white/10 rounded-xl shadow-sm overflow-hidden flex flex-col min-h-104"
       aria-label="Actividad reciente de cotizaciones operativas"
     >
       {/* ── Encabezado ──────────────────────────────────────────────────── */}
@@ -73,13 +73,13 @@ export const RecentActivityFeed = () => {
 
       {/* ── Contenido ────────────────────────────────────────────────────── */}
       {isLoading ? (
-        <div className="p-4 space-y-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <LoadingSkeleton key={i} className="h-14 rounded-lg" />
+        <div className="flex-1 p-4 space-y-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <LoadingSkeleton key={i} className="h-12 rounded-lg" />
           ))}
         </div>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="flex-1 overflow-x-auto">
           <table className="w-full text-sm text-left min-w-140">
             <thead className="text-[10px] uppercase tracking-wider font-bold text-slate-400 bg-slate-50/50 dark:bg-white/2 border-b border-slate-100 dark:border-white/10">
               <tr>

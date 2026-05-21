@@ -128,7 +128,7 @@ export const PendingApprovalQueue = () => {
   return (
     <>
       <section
-        className="bg-white dark:bg-black border border-slate-200 dark:border-white/10 rounded-xl shadow-sm overflow-hidden flex flex-col h-full"
+        className="bg-white dark:bg-black border border-slate-200 dark:border-white/10 rounded-xl shadow-sm overflow-hidden flex flex-col h-full min-h-136"
         aria-label="Cola de cotizaciones operativas pendientes de autorización"
       >
         <div className="px-6 py-5 border-b border-slate-100 dark:border-white/10 flex items-center justify-between bg-slate-50/50 dark:bg-white/2 shrink-0">
@@ -140,7 +140,11 @@ export const PendingApprovalQueue = () => {
               <h3 className="font-bold text-slate-800 dark:text-white text-sm">
                 Cola de Autorización
               </h3>
-              {!isLoading && (
+              {isLoading ? (
+                <div className="mt-1 w-40" aria-hidden="true">
+                  <LoadingSkeleton className="h-3 rounded-full" />
+                </div>
+              ) : (
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                   {pendingOperationsQuotes.length === 0
                     ? "Sin pendientes · todo al día"
@@ -150,22 +154,26 @@ export const PendingApprovalQueue = () => {
             </div>
           </div>
 
-          {pendingOperationsQuotes.length > 0 && (
+          {isLoading ? (
+            <div className="w-6" aria-hidden="true">
+              <LoadingSkeleton className="h-6 rounded-full" />
+            </div>
+          ) : pendingOperationsQuotes.length > 0 ? (
             <span className="flex items-center justify-center min-w-6 h-6 rounded-full text-[11px] font-bold bg-amber-500 text-white px-1.5 animate-pulse">
               {pendingOperationsQuotes.length}
             </span>
-          )}
+          ) : null}
         </div>
 
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-112">
           {isLoading ? (
             <div className="p-4 space-y-3">
-              {Array.from({ length: 3 }).map((_, index) => (
-                <LoadingSkeleton key={index} className="h-16 rounded-lg" />
+              {Array.from({ length: MAX_VISIBLE }).map((_, index) => (
+                <LoadingSkeleton key={index} className="h-18 rounded-xl" />
               ))}
             </div>
           ) : visibleOperationsQuotes.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-14 gap-3">
+            <div className="flex h-full min-h-112 flex-col items-center justify-center py-14 gap-3">
               <div className="p-3 rounded-full bg-emerald-50 dark:bg-emerald-500/10">
                 <InboxIcon className="w-6 h-6 text-emerald-500" />
               </div>

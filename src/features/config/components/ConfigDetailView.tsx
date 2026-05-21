@@ -2,62 +2,81 @@ import { ArrowLeftIcon } from "@/src/components/Icons";
 import dynamic from "next/dynamic";
 import { LoadingSkeleton } from "@/src/components/LoadingSkeleton";
 
+function ConfigDetailLoadingSkeleton() {
+  return (
+    <div
+      className="flex flex-col gap-6 min-h-128"
+      role="status"
+      aria-live="polite"
+      aria-label="Cargando detalle de configuración"
+    >
+      <div className="w-52">
+        <LoadingSkeleton className="h-10 rounded-full" />
+      </div>
+      <LoadingSkeleton className="h-24 rounded-2xl" />
+      <LoadingSkeleton className="h-104 rounded-3xl" />
+    </div>
+  );
+}
+
+const configDetailLoading = () => <ConfigDetailLoadingSkeleton />;
+
 const WarehouseList = dynamic(() => import("@/src/features/warehouses/components/WarehouseList"), {
-  loading: () => <LoadingSkeleton />,
+  loading: configDetailLoading,
 });
 const LocationList = dynamic(() => import("@/src/features/locations/components/LocationList"), {
-  loading: () => <LoadingSkeleton />,
+  loading: configDetailLoading,
 });
 const SatInfo = dynamic(() => import("@/src/features/sat/components/SatInfo").then(mod => mod.SatInfo), {
-  loading: () => <LoadingSkeleton />,
+  loading: configDetailLoading,
 });
 const CompanyList = dynamic(() => import("@/src/features/companies/components/CompanyList"), {
-  loading: () => <LoadingSkeleton />,
+  loading: configDetailLoading,
 });
 const BranchList = dynamic(() => import("@/src/features/branches/components/BranchList"), {
-  loading: () => <LoadingSkeleton />,
+  loading: configDetailLoading,
 });
 const CurrencyList = dynamic(() => import("@/src/features/currency/components/CurrencyList"), {
-  loading: () => <LoadingSkeleton />,
+  loading: configDetailLoading,
 });
 const SerieFolioList = dynamic(() => import("@/src/features/series-folios/components/SerieFolioList"), {
-  loading: () => <LoadingSkeleton />,
+  loading: configDetailLoading,
 });
 const RoleList = dynamic(() => import("@/src/features/roles/components/RoleList"), {
-  loading: () => <LoadingSkeleton />,
+  loading: configDetailLoading,
 });
 const UserList = dynamic(() => import("@/src/features/users/components/UserList"), {
-  loading: () => <LoadingSkeleton />,
+  loading: configDetailLoading,
 });
 const ProductCategoryList = dynamic(() => import("@/src/features/product-categories/components/ProductCategoryList"), {
-    loading: () => <LoadingSkeleton />,
+    loading: configDetailLoading,
 });
 const ProductTypeList = dynamic(() => import("@/src/features/product-types/components/ProductTypeList"), {
-    loading: () => <LoadingSkeleton />,
+    loading: configDetailLoading,
 });
 const ColorList = dynamic(() => import("@/src/features/colors/components/ColorList"), {
-    loading: () => <LoadingSkeleton />,
+    loading: configDetailLoading,
 });
 const SizeList = dynamic(() => import("@/src/features/sizes/components/SizeList"), {
-    loading: () => <LoadingSkeleton />,
+    loading: configDetailLoading,
 });
 const UnitOfMeasureList = dynamic(() => import("@/src/features/units-of-measure/components/UnitOfMeasureList"), {
-    loading: () => <LoadingSkeleton />,
+    loading: configDetailLoading,
 });
 const TaxList = dynamic(() => import("@/src/features/taxes/components/TaxList"), {
-    loading: () => <LoadingSkeleton />,
+    loading: configDetailLoading,
 });
 const SatProdservCodeList = dynamic(() => import("@/src/features/sat-prodserv-codes/components/SatProdservCodeList"), {
-    loading: () => <LoadingSkeleton />,
+    loading: configDetailLoading,
 });
 const SatUnitCodeList = dynamic(() => import("@/src/features/sat-unit-codes/components/SatUnitCodeList"), {
-    loading: () => <LoadingSkeleton />,
+    loading: configDetailLoading,
 });
 const ProductList = dynamic(() => import("@/src/features/products/components/ProductList"), {
-    loading: () => <LoadingSkeleton />,
+    loading: configDetailLoading,
 });
 const ProductVariantList = dynamic(() => import("@/src/features/product-variants/components/ProductVariantList"), {
-    loading: () => <LoadingSkeleton />,
+    loading: configDetailLoading,
 });
 
 
@@ -82,7 +101,7 @@ export function ConfigDetailView({ selectedView, onBack }: ConfigDetailViewProps
   return (
     <div 
       className={`
-        col-start-1 row-start-1 w-full transition-all duration-500 ease-in-out
+        col-start-1 row-start-1 w-full min-h-128 transition-all duration-500 ease-in-out
         ${!selectedView 
           ? "opacity-0 translate-y-20 pointer-events-none scale-95" 
           : "opacity-100 translate-y-0 scale-100 delay-150"

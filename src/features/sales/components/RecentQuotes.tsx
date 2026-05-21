@@ -82,7 +82,7 @@ export const RecentQuotes = () => {
   );
 
   return (
-    <section className="bg-white dark:bg-black border border-slate-200 dark:border-white/10 rounded-xl shadow-sm p-6 flex flex-col h-full">
+    <section className="bg-white dark:bg-black border border-slate-200 dark:border-white/10 rounded-xl shadow-sm p-6 flex flex-col h-full min-h-88">
       <div className="flex justify-between items-center mb-6">
         <h3 className="font-bold text-slate-800 dark:text-white text-sm">Cotizaciones Recientes</h3>
         <Link
@@ -93,7 +93,7 @@ export const RecentQuotes = () => {
           Ver todos
         </Link>
       </div>
-      <div className="flex-1 space-y-4">
+      <div className="flex-1 min-h-[13rem] space-y-4">
         {isLoading ? (
           <>
             <div className="h-16 rounded-lg bg-slate-100 dark:bg-white/10 animate-pulse" />

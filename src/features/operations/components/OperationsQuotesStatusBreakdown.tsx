@@ -68,7 +68,7 @@ export const OperationsQuotesStatusBreakdown = () => {
 
   return (
     <section
-      className="bg-white dark:bg-black border border-slate-200 dark:border-white/10 rounded-xl shadow-sm p-6 flex flex-col"
+      className="bg-white dark:bg-black border border-slate-200 dark:border-white/10 rounded-xl shadow-sm p-6 flex flex-col min-h-88"
       aria-label="Distribución de cotizaciones operativas por estatus"
     >
       <h3 className="font-bold text-slate-800 dark:text-white text-sm mb-5">
@@ -76,11 +76,17 @@ export const OperationsQuotesStatusBreakdown = () => {
       </h3>
 
       {isLoading ? (
-        <div className="space-y-3.5">
-          {Array.from({ length: 5 }).map((_, index) => (
-            <LoadingSkeleton key={index} className="h-9 rounded-lg" />
-          ))}
-        </div>
+        <>
+          <div className="space-y-3.5 flex-1">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <LoadingSkeleton key={index} className="h-9 rounded-lg" />
+            ))}
+          </div>
+          <div className="mt-5 pt-4 border-t border-slate-100 dark:border-white/6 space-y-2">
+            <LoadingSkeleton className="h-4 rounded-lg" />
+            <LoadingSkeleton className="h-4 rounded-lg" />
+          </div>
+        </>
       ) : (
         <div className="space-y-3.5">
           {rows.map((row) => {

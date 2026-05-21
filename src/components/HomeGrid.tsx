@@ -8,6 +8,10 @@ import TiltCard from "./TiltCard";
 
 export const HomedGrid = () => {
   const { data: session, status } = useSession();
+  const visibleHomeCards = homeCards.filter((card) =>
+    hasPermission(card.permission, session?.user)
+  );
+  const skeletonCards = visibleHomeCards.length > 0 ? visibleHomeCards : homeCards;
 
   /**
    * Durante la carga de sesión, renderiza placeholders con las mismas dimensiones
@@ -18,7 +22,7 @@ export const HomedGrid = () => {
   if (status === "loading") {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto py-12">
-        {homeCards.map((card) => (
+        {skeletonCards.map((card) => (
           <div
             key={card.href}
             className={`${card.className} min-h-64`}
@@ -31,7 +35,7 @@ export const HomedGrid = () => {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto py-12">
-      {homeCards.map((card) => (
+      {visibleHomeCards.map((card) => (
         <TiltCard
           key={card.href}
           icon={card.icon}
@@ -42,8 +46,7 @@ export const HomedGrid = () => {
           accentClass={card.accentClass}
           accentBgClass={card.accentBgClass}
           shadowColorClassName={card.shadowColorClassName}
-          className={card.className}
-          isVisible={hasPermission(card.permission, session?.user)}
+          className={`${card.className} min-h-64`}
         />
       ))}
     </div>
