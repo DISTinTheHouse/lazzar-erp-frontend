@@ -10,6 +10,7 @@ import {
   CheckCircleIcon,
   RejectIcon,
   ViewIcon,
+  WarehouseIcon,
 } from "@/src/components/Icons";
 import { MainDialog } from "@/src/components/MainDialog";
 import { capitalize } from "@/src/utils/capitalize";
@@ -23,6 +24,7 @@ import {
 import {
   getStatusStyles as getOperationsQuoteStatusStyles,
 } from "../../quotes/utils/getStatusStyle";
+import { OperationsQuoteStockReviewDialog } from "./OperationsQuoteStockReviewDialog";
 import { useApproveOperationsQuote } from "../hooks/useApproveOperationsQuote";
 import { useRejectOperationsQuote } from "../hooks/useRejectOperationsQuote";
 import { OperationsQuote } from "../interfaces/operations-quote.interface";
@@ -64,6 +66,7 @@ const ActionsCell = ({
   operationsQuote: OperationsQuote;
 }) => {
   const [isViewOpen, setIsViewOpen] = useState(false);
+  const [isStockReviewOpen, setIsStockReviewOpen] = useState(false);
   const [isAuthorizeOpen, setIsAuthorizeOpen] = useState(false);
   const [isRejectOpen, setIsRejectOpen] = useState(false);
   const {
@@ -103,6 +106,12 @@ const ActionsCell = ({
       label: "Ver detalles",
       icon: ViewIcon,
       onSelect: () => setIsViewOpen(true),
+    },
+    {
+      label: "Revisar inventario",
+      icon: WarehouseIcon,
+      onSelect: () => setIsStockReviewOpen(true),
+      permission: "R-MESACONTROL",
     },
     {
       label: "Autorizar",
@@ -148,6 +157,15 @@ const ActionsCell = ({
           <OperationsQuoteDetails quoteId={operationsQuote.id} />
         </MainDialog>
       )}
+
+      {/* key={id+open} garantiza que el componente se remonte al abrir/cerrar el di\u00e1logo,
+          reseteando el estado de selecciones de producci\u00f3n sin necesitar useEffect. */}
+      <OperationsQuoteStockReviewDialog
+        key={`stock-review-${operationsQuote.id}-${isStockReviewOpen}`}
+        open={isStockReviewOpen}
+        onOpenChange={setIsStockReviewOpen}
+        operationsQuote={operationsQuote}
+      />
 
       <ConfirmDialog
         open={isAuthorizeOpen && canManageOperationsAuthorization}
