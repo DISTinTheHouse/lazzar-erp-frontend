@@ -25,6 +25,7 @@ import {
   FileCode2Icon,
   DownloadIcon,
 } from "@/src/components/Icons";
+import { TableMiniStepper, type TableMiniStepperProps } from "@/src/components/TableMiniStepper";
 
 // ── Configuración visual de estatus ──────────────────────────────────────────
 
@@ -52,6 +53,17 @@ const VERIFICACION_CFG: Record<
   parcial:       { label: 'Parcial',       cls: 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400',        dot: 'bg-amber-500' },
 };
 
+const CEDICOR_PRODUCTION_STEPPER_CFG = {
+  cancelledStatuses: ['cancelado'],
+  completedStatuses: ['despachado_confeccion'],
+  blockedVariants: [
+    { statuses: ['material_faltante'], accentDotClass: 'bg-orange-500' },
+  ],
+} satisfies Pick<
+  TableMiniStepperProps<ProductionOrderStatus>,
+  'cancelledStatuses' | 'completedStatuses' | 'blockedVariants'
+>;
+
 // ── Sub-componentes de celda ──────────────────────────────────────────────────
 
 /** Badge de estatus con indicador de color */
@@ -77,72 +89,6 @@ const VerificacionBadge = ({ estado }: { estado: MaterialVerificationStatus }) =
       <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${cfg.dot}`} aria-hidden="true" />
       {cfg.label}
     </span>
-  );
-};
-
-/**
- * Indicador compacto de progreso por pasos dentro de la celda de tabla.
- * Muestra el número de paso actual y una pista de 9 puntos coloreados.
- * Estados especiales: cancelado (rojo), material_faltante (ámbar), completado (verde).
- */
-const MiniStepper = ({
-  pasoActual,
-  estatus,
-}: {
-  pasoActual: number;
-  estatus: ProductionOrderStatus;
-}) => {
-  const total      = PRODUCTION_ORDER_STEPS.length; // 9
-  const filled     = Math.min(pasoActual, total);
-  const cancelado  = estatus === 'cancelado';
-  const bloqueado  = estatus === 'material_faltante';
-  const completado = estatus === 'despachado_confeccion';
-
-  const labelCls = cancelado
-    ? 'text-red-500 dark:text-red-400'
-    : bloqueado
-    ? 'text-amber-600 dark:text-amber-400'
-    : completado
-    ? 'text-emerald-600 dark:text-emerald-400'
-    : 'text-slate-700 dark:text-slate-200';
-
-  const label = cancelado
-    ? 'Cancelado'
-    : bloqueado
-    ? 'Bloqueado'
-    : completado
-    ? 'Completo'
-    : `Paso ${filled} / ${total}`;
-
-  return (
-    <div className="flex flex-col gap-1 min-w-25">
-      <span className={`text-xs font-semibold tabular-nums ${labelCls}`}>{label}</span>
-      <div className="flex items-center gap-0.5" aria-hidden="true">
-        {PRODUCTION_ORDER_STEPS.map((_, i) => {
-          const isDone    = i < filled;
-          const isCurrent = i === filled - 1;
-
-          let dotCls: string;
-          if (cancelado) {
-            dotCls = isDone ? 'w-3 bg-red-400 dark:bg-red-500' : 'w-3 bg-slate-200 dark:bg-white/10';
-          } else if (bloqueado) {
-            if (isCurrent) dotCls = 'w-4 bg-amber-500 dark:bg-amber-400';
-            else if (isDone) dotCls = 'w-3 bg-amber-300 dark:bg-amber-700';
-            else dotCls = 'w-3 bg-slate-200 dark:bg-white/10';
-          } else if (completado) {
-            dotCls = isDone ? 'w-3 bg-emerald-400 dark:bg-emerald-500' : 'w-3 bg-slate-200 dark:bg-white/10';
-          } else if (isCurrent) {
-            dotCls = 'w-4 bg-sky-500 dark:bg-sky-400';
-          } else if (isDone) {
-            dotCls = 'w-3 bg-sky-300 dark:bg-sky-600';
-          } else {
-            dotCls = 'w-3 bg-slate-200 dark:bg-white/10';
-          }
-
-          return <div key={i} className={`h-1.5 rounded-full transition-all duration-300 ${dotCls}`} />;
-        })}
-      </div>
-    </div>
   );
 };
 
@@ -319,9 +265,11 @@ export function getCedicorProductionOrderColumns(): ColumnDef<ProductionOrder>[]
       cell: (info) => {
         const row = info.row.original;
         return (
-          <MiniStepper
-            pasoActual={info.getValue<number>()}
-            estatus={row.estatus}
+          <TableMiniStepper
+            steps={PRODUCTION_ORDER_STEPS}
+            step={info.getValue<number>()}
+            status={row.estatus}
+            {...CEDICOR_PRODUCTION_STEPPER_CFG}
           />
         );
       },

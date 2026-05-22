@@ -24,6 +24,7 @@ import {
   ExclamationTriangleIcon,
   DownloadIcon,
 } from "@/src/components/Icons";
+import { TableMiniStepper, type TableMiniStepperProps } from "@/src/components/TableMiniStepper";
 
 // ── Configuración visual de estatus ──────────────────────────────────────────
 
@@ -44,6 +45,18 @@ const PRIORIDAD_CFG: Record<ProductionOrderPriority, { cls: string; label: strin
   media: { cls: 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400', label: 'Media' },
   baja:  { cls: 'bg-slate-100 text-slate-500 dark:bg-slate-500/10 dark:text-slate-400', label: 'Baja' },
 };
+
+const PRODUCTION_ORDER_STEPPER_CFG = {
+  cancelledStatuses: ['cancelada'],
+  completedStatuses: ['cerrada'],
+  blockedVariants: [
+    { statuses: ['material_faltante'], accentDotClass: 'bg-red-500' },
+    { statuses: ['comprando_materiales'], accentDotClass: 'bg-orange-500' },
+  ],
+} satisfies Pick<
+  TableMiniStepperProps<ProductionOrderStatus>,
+  'cancelledStatuses' | 'completedStatuses' | 'blockedVariants'
+>;
 
 // ── Sub-componentes de celda ──────────────────────────────────────────────────
 
@@ -67,80 +80,6 @@ const PrioridadBadge = ({ prioridad }: { prioridad: ProductionOrderPriority }) =
     <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold ${cfg.cls}`}>
       {PRODUCTION_ORDER_PRIORITY_LABELS[prioridad]}
     </span>
-  );
-};
-
-/**
- * Indicador compacto de progreso sobre los 6 pasos canónicos.
- * Estados especiales: cancelada (gris), material_faltante (rojo), comprando (naranja), cerrada (verde).
- */
-const MiniStepper = ({
-  pasoActual,
-  estatus,
-}: {
-  pasoActual: number;
-  estatus: ProductionOrderStatus;
-}) => {
-  const total     = PRODUCTION_ORDER_STEPS.length; // 6
-  const filled    = Math.min(pasoActual, total);
-  const cancelado = estatus === 'cancelada';
-  const faltante  = estatus === 'material_faltante';
-  const comprando = estatus === 'comprando_materiales';
-  const cerrada   = estatus === 'cerrada';
-
-  const labelCls = cancelado
-    ? 'text-zinc-400 dark:text-zinc-500'
-    : faltante
-    ? 'text-red-600 dark:text-red-400'
-    : comprando
-    ? 'text-orange-600 dark:text-orange-400'
-    : cerrada
-    ? 'text-emerald-600 dark:text-emerald-400'
-    : 'text-slate-700 dark:text-slate-200';
-
-  const label = cancelado
-    ? 'Cancelada'
-    : faltante
-    ? 'Bloqueada'
-    : comprando
-    ? 'Comprando'
-    : cerrada
-    ? 'Completa'
-    : `Paso ${filled} / ${total}`;
-
-  return (
-    <div className="flex flex-col gap-1 min-w-24">
-      <span className={`text-xs font-semibold tabular-nums ${labelCls}`}>{label}</span>
-      <div className="flex items-center gap-0.5" aria-hidden="true">
-        {PRODUCTION_ORDER_STEPS.map((_, i) => {
-          const isDone    = i < filled;
-          const isCurrent = i === filled - 1;
-
-          let dotCls: string;
-          if (cancelado) {
-            dotCls = isDone ? 'w-3 bg-zinc-300 dark:bg-zinc-600' : 'w-3 bg-slate-100 dark:bg-white/10';
-          } else if (faltante) {
-            if (isCurrent) dotCls = 'w-4 bg-red-500 dark:bg-red-400';
-            else if (isDone) dotCls = 'w-3 bg-red-200 dark:bg-red-800';
-            else dotCls = 'w-3 bg-slate-200 dark:bg-white/10';
-          } else if (comprando) {
-            if (isCurrent) dotCls = 'w-4 bg-orange-500 dark:bg-orange-400';
-            else if (isDone) dotCls = 'w-3 bg-orange-200 dark:bg-orange-800';
-            else dotCls = 'w-3 bg-slate-200 dark:bg-white/10';
-          } else if (cerrada) {
-            dotCls = 'w-3 bg-emerald-400 dark:bg-emerald-500';
-          } else if (isCurrent) {
-            dotCls = 'w-4 bg-sky-500 dark:bg-sky-400';
-          } else if (isDone) {
-            dotCls = 'w-3 bg-sky-300 dark:bg-sky-600';
-          } else {
-            dotCls = 'w-3 bg-slate-200 dark:bg-white/10';
-          }
-
-          return <div key={i} className={`h-1.5 rounded-full transition-all duration-300 ${dotCls}`} />;
-        })}
-      </div>
-    </div>
   );
 };
 
@@ -349,7 +288,12 @@ export function getProductionOrderColumns(): ColumnDef<ProductionOrder, unknown>
       header: 'Progreso',
       size: 140,
       cell: ({ row }) => (
-        <MiniStepper pasoActual={row.original.paso_actual} estatus={row.original.estatus} />
+        <TableMiniStepper
+          steps={PRODUCTION_ORDER_STEPS}
+          step={row.original.paso_actual}
+          status={row.original.estatus}
+          {...PRODUCTION_ORDER_STEPPER_CFG}
+        />
       ),
     }),
 
