@@ -29,6 +29,9 @@ import {
 const IMAGE_URL_EXTENSION_REGEX =
   /\.(png|jpe?g|gif|webp|bmp|svg|avif)(\?.*)?(#.*)?$/i;
 
+const REQUIRED_FIELD_ERROR = "Requerido";
+const POSITIVE_NUMBER_ERROR = "Positivo";
+
 const isValidImageUrl = (value: string) => {
   const trimmedValue = value.trim();
   if (!trimmedValue) {
@@ -183,6 +186,35 @@ export function useEmbroideryState(initialItem?: QuoteItem | null) {
           };
         })
       );
+
+      setSpecErrors((prev) => {
+        const currentErrors = prev[id];
+
+        if (!currentErrors || (field === "nuevoPonchado" && value)) {
+          return prev;
+        }
+
+        const nextSpecErrors: EmbroiderySpecFieldErrors = { ...currentErrors };
+
+        if (nextSpecErrors.ancho === REQUIRED_FIELD_ERROR) {
+          delete nextSpecErrors.ancho;
+        }
+
+        if (nextSpecErrors.alto === REQUIRED_FIELD_ERROR) {
+          delete nextSpecErrors.alto;
+        }
+
+        if (Object.keys(nextSpecErrors).length === 0) {
+          const nextErrors = { ...prev };
+          delete nextErrors[id];
+          return nextErrors;
+        }
+
+        return {
+          ...prev,
+          [id]: nextSpecErrors,
+        };
+      });
     },
     []
   );
@@ -225,18 +257,22 @@ export function useEmbroideryState(initialItem?: QuoteItem | null) {
       }
 
       const normalizedAncho = spec.ancho.trim();
-      if (normalizedAncho) {
+      if (spec.nuevoPonchado && !normalizedAncho) {
+        specError.ancho = REQUIRED_FIELD_ERROR;
+      } else if (normalizedAncho) {
         const ancho = Number(normalizedAncho);
         if (!Number.isFinite(ancho) || ancho <= 0) {
-          specError.ancho = "Positivo";
+          specError.ancho = POSITIVE_NUMBER_ERROR;
         }
       }
 
       const normalizedAlto = spec.alto.trim();
-      if (normalizedAlto) {
+      if (spec.nuevoPonchado && !normalizedAlto) {
+        specError.alto = REQUIRED_FIELD_ERROR;
+      } else if (normalizedAlto) {
         const alto = Number(normalizedAlto);
         if (!Number.isFinite(alto) || alto <= 0) {
-          specError.alto = "Positivo";
+          specError.alto = POSITIVE_NUMBER_ERROR;
         }
       }
 
