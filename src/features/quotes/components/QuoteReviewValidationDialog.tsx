@@ -41,7 +41,6 @@ export function QuoteReviewValidationDialog({
       open={open}
       onOpenChange={onOpenChange}
       maxWidth="520px"
-      showCloseButton={false}
       title={
         <div className="flex items-center gap-3">
           <span className="flex items-center justify-center w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-500/15 shrink-0">
