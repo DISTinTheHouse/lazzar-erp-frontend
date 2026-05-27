@@ -9,10 +9,12 @@ interface WorkspaceState {
   selectedBranch: Branch | null;
   availableBranches: Branch[];
   branchSwitching: boolean;
+  hasHydrated: boolean;
   setWorkspace: (company: Partial<Company>, branch?: Branch) => void;
   setAvailableBranches: (branches: Branch[]) => void;
   updateBranch: (branch: Branch) => void;
   clearWorkspace: () => void;
+  setHasHydrated: (hasHydrated: boolean) => void;
 }
 
 export const useWorkspaceStore = create<WorkspaceState>()(
@@ -23,6 +25,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
         selectedBranch: null,
         availableBranches: [],
         branchSwitching: false,
+        hasHydrated: false,
 
         setWorkspace: (company, branch) => {
           const prevBranchId = get().selectedBranch?.id;
@@ -38,6 +41,8 @@ export const useWorkspaceStore = create<WorkspaceState>()(
         
         setAvailableBranches: (branches) =>
           set({ availableBranches: branches }),
+
+        setHasHydrated: (hasHydrated) => set({ hasHydrated }),
 
         updateBranch: (updatedBranch) => {
           set((state) => ({
@@ -56,6 +61,11 @@ export const useWorkspaceStore = create<WorkspaceState>()(
       }),
       { // Nombre del storage para persistencia
         name: "workspace-storage",
+        onRehydrateStorage: () => (state, error) => {
+          if (!error) {
+            state?.setHasHydrated(true);
+          }
+        },
       }
     ),
     { // Nombre del store para devtools

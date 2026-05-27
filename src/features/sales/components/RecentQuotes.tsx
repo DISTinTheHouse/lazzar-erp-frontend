@@ -1,16 +1,31 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { DialogHeader } from "@/src/components/DialogHeader";
 import { MainDialog } from "@/src/components/MainDialog";
 import { OrderStatusPathIcon } from "@/src/components/Icons";
 import { formatCurrency } from "@/src/utils/formatCurrency";
-import { QuoteDetails } from "@/src/features/quotes/components/QuoteDetails";
 import { useQuotes } from "@/src/features/quotes/hooks/useQuotes";
 import { Quote } from "@/src/features/quotes/interfaces/quote.interface";
 import { getStatusStyles } from "@/src/features/quotes/utils/getStatusStyle";
 import { capitalize } from "@/src/utils/capitalize";
+
+// Carga dinámica del componente de detalles de cotización para optimizar la carga inicial y evitar cargarlo si el usuario no interactúa con esa acción
+const LazyQuoteDetails = dynamic(
+  () => import("@/src/features/quotes/components/QuoteDetails").then((mod) => mod.QuoteDetails),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="space-y-4 min-h-112" role="status" aria-live="polite" aria-label="Cargando detalles de la cotización">
+        <div className="h-24 rounded-xl bg-slate-200/70 dark:bg-white/10 animate-pulse" />
+        <div className="h-56 rounded-xl bg-slate-200/70 dark:bg-white/10 animate-pulse" />
+        <div className="h-48 rounded-xl bg-slate-200/70 dark:bg-white/10 animate-pulse" />
+      </div>
+    ),
+  }
+);
 
 const statusDialogColors: Record<number, "sky" | "emerald" | "amber" | "rose"> = {
   1: "amber",
@@ -93,7 +108,7 @@ export const RecentQuotes = () => {
           Ver todos
         </Link>
       </div>
-      <div className="flex-1 min-h-[13rem] space-y-4">
+      <div className="flex-1 min-h-52 space-y-4">
         {isLoading ? (
           <>
             <div className="h-16 rounded-lg bg-slate-100 dark:bg-white/10 animate-pulse" />
@@ -167,7 +182,7 @@ export const RecentQuotes = () => {
             />
           }
         >
-          <QuoteDetails quoteId={selectedQuote.id} />
+          <LazyQuoteDetails quoteId={selectedQuote.id} />
         </MainDialog>
       ) : null}
     </section>

@@ -1,13 +1,26 @@
 'use client';
 
+import dynamic from "next/dynamic";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Toaster } from "react-hot-toast";
 import { SessionProvider } from "next-auth/react";
 import { Session } from "next-auth";
-import { useState } from "react";
+import { type ComponentType, useState } from "react";
 import { RadixThemeWrapper } from "@/src/components/RadixThemeWrapper";
 import { SpeedInsights } from '@vercel/speed-insights/next';
+
+type QueryDevtoolsProps = {
+  initialIsOpen?: boolean;
+};
+
+// Carga dinámica de React Query Devtools solo en desarrollo para evitar sobrecarga en producción
+const QueryDevtools: ComponentType<QueryDevtoolsProps> =
+  process.env.NODE_ENV === "development"
+    ? dynamic<QueryDevtoolsProps>(
+        () => import("@tanstack/react-query-devtools").then((mod) => mod.ReactQueryDevtools),
+        { ssr: false }
+      )
+    : () => null;
 
 export const Provider = ({ children, session }: { children: React.ReactNode, session?: Session | null }) => {
   const [queryClient] = useState(() => new QueryClient({
@@ -29,7 +42,7 @@ export const Provider = ({ children, session }: { children: React.ReactNode, ses
 
         <RadixThemeWrapper>
           {children}
-          <ReactQueryDevtools initialIsOpen={false} />
+          <QueryDevtools initialIsOpen={false} />
         </RadixThemeWrapper>
 
         <Toaster position="top-right" />

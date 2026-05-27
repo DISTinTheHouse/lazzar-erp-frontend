@@ -7,11 +7,25 @@ import { Branch } from "../features/branches/interfaces/branch.interface";
 import { LoadingSpinnerIcon } from "./Icons";
 
 export const WorkspaceInfo = () => {
+  const hasHydrated = useWorkspaceStore((state) => state.hasHydrated);
   const selectedCompany = useWorkspaceStore((state) => state.selectedCompany);
   const selectedBranch = useWorkspaceStore((state) => state.selectedBranch);
   const availableBranches = useWorkspaceStore((state) => state.availableBranches);
   const setWorkspace = useWorkspaceStore((state) => state.setWorkspace);
   const branchSwitching = useWorkspaceStore((state) => state.branchSwitching);
+
+  // Mostrar un estado de carga mientras se hidrata el store para evitar parpadeos o estados inconsistentes
+  if (!hasHydrated) {
+    return (
+      <div
+        className="flex min-w-[18rem] items-center gap-3"
+        aria-hidden="true"
+      >
+        <span className="h-2.5 w-2.5 rounded-full bg-slate-200 dark:bg-white/10" />
+        <div className="h-8 w-full rounded-full bg-slate-200/80 dark:bg-white/10 animate-pulse" />
+      </div>
+    );
+  }
 
   if (!selectedCompany?.id) {
     return null;
@@ -25,7 +39,7 @@ export const WorkspaceInfo = () => {
   };
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex min-w-[18rem] items-center gap-3">
       {/* Status Indicator */}
       <span className="relative flex h-2.5 w-2.5">
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -35,7 +49,7 @@ export const WorkspaceInfo = () => {
       <div className="flex items-center gap-3">
         {/* Company */}
         <div className="flex items-center gap-1.5">
-          <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+          <span className="max-w-44 truncate text-xs font-semibold text-slate-700 dark:text-slate-200">
             {companyName}
           </span>
           <BancosIcon className="w-4 h-4 text-sky-500 dark:text-sky-400" />
@@ -57,7 +71,7 @@ export const WorkspaceInfo = () => {
             >
               {selectedBranch ? (
                 <>
-                  <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                  <span className="max-w-32 truncate text-xs font-medium text-slate-600 dark:text-slate-300">
                     {selectedBranch.nombre}
                   </span>
                   {branchSwitching ? (

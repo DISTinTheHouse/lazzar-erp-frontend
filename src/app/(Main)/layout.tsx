@@ -25,7 +25,10 @@ export default function MainLayout({
         <Header />
 
         {/* PAGE CONTENT */}
-        <main className="flex-1 w-full overflow-y-auto px-6 pb-6 md:px-12 md:pb-12 pt-20 md:pt-0">
+        <main
+          className="flex-1 w-full overflow-y-auto px-6 pb-6 pt-20 md:px-12 md:pb-12 md:pt-0"
+          style={{ scrollbarGutter: "stable both-edges" }}
+        >
           <BranchChangeLoader>{children}</BranchChangeLoader>
         </main>
       </div>

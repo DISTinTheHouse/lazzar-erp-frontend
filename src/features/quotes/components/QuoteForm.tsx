@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { FormInput } from "@/src/components/FormInput";
 import { FormSelect } from "@/src/components/FormSelect";
 import {
@@ -13,7 +14,6 @@ import { getFieldError } from "../../../utils/getFieldError";
 import { formatCurrency } from "../../../utils/formatCurrency";
 import { Loader } from "@/src/components/Loader";
 import { CustomerSearchDropdown } from "./CustomerSearchDropdown";
-import CustomerForm from "../../customers/components/CustomerForm";
 import { DialogHeader } from "@/src/components/DialogHeader";
 import { useQuoteForm } from "../hooks/useQuoteForm";
 import { AddProductDialog } from "./AddProductDialog";
@@ -21,6 +21,16 @@ import { EditEmbroideryDialog } from "./EditEmbroideryDialog";
 import { EditReflectiveDialog } from "./EditReflectiveDialog";
 import { EditSizesDialog } from "./EditSizesDialog";
 import { QuoteCreationSuccessMessage } from "./QuoteCreationSuccessMessage";
+
+const LazyCustomerForm = dynamic(
+  () => import("../../customers/components/CustomerForm"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="min-h-96 animate-pulse rounded-3xl bg-slate-100 dark:bg-white/5" />
+    ),
+  }
+);
 // Exporta el tipo del hook para compartir el contrato entre creación y edición
 export type QuoteFormHookResult = ReturnType<typeof useQuoteForm>;
 
@@ -259,7 +269,9 @@ export function QuoteFormContent({
                   onOpenChange={setIsCustomerDialogOpen}
                   maxWidth="900px"
                 >
-                  <CustomerForm onCreated={handleCustomerCreated} invalidateOrderOnboarding />
+                  {isCustomerDialogOpen ? (
+                    <LazyCustomerForm onCreated={handleCustomerCreated} invalidateOrderOnboarding />
+                  ) : null}
                 </MainDialog>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

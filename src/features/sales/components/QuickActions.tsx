@@ -1,12 +1,23 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MainDialog } from "@/src/components/MainDialog";
 import { DialogHeader } from "@/src/components/DialogHeader";
-import CustomerForm from "@/src/features/customers/components/CustomerForm";
 import { ClockIcon, ClientesIcon, PedidosIcon, PlusIcon } from "@/src/components/Icons";
+
+// Carga dinámica del formulario de cliente para optimizar la carga inicial y evitar cargarlo si el usuario no interactúa con esa acción
+const LazyCustomerForm = dynamic(
+  () => import("@/src/features/customers/components/CustomerForm"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="min-h-96 animate-pulse rounded-3xl bg-slate-100 dark:bg-white/5" />
+    ),
+  }
+);
 
 export const QuickActions = () => {
   const router = useRouter();
@@ -56,7 +67,7 @@ export const QuickActions = () => {
             onOpenChange={setIsCustomerDialogOpen}
             maxWidth="900px"
           >
-            <CustomerForm onCreated={handleCustomerCreated} />
+            {isCustomerDialogOpen ? <LazyCustomerForm onCreated={handleCustomerCreated} /> : null}
           </MainDialog>
         </>
         <Link
