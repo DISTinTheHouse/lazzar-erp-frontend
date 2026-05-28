@@ -3,10 +3,7 @@
 import dynamic from "next/dynamic";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
-import { SessionProvider } from "next-auth/react";
-import { Session } from "next-auth";
 import { type ComponentType, useState } from "react";
-import { RadixThemeWrapper } from "@/src/components/RadixThemeWrapper";
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
 type QueryDevtoolsProps = {
@@ -22,7 +19,7 @@ const QueryDevtools: ComponentType<QueryDevtoolsProps> =
       )
     : () => null;
 
-export const Provider = ({ children, session }: { children: React.ReactNode, session?: Session | null }) => {
+export const Provider = ({ children }: { children: React.ReactNode }) => {
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: { // Opciones por defecto para las queries
       queries: {
@@ -34,20 +31,16 @@ export const Provider = ({ children, session }: { children: React.ReactNode, ses
   }));
 
   return (
-    <SessionProvider session={session}>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
 
-        {/* Speed Insights sólo envía datos en producción; debug desactivado en desarrollo */}
-        <SpeedInsights debug={false} />
+      {/* Speed Insights sólo envía datos en producción; debug desactivado en desarrollo */}
+      <SpeedInsights debug={false} />
 
-        <RadixThemeWrapper>
-          {children}
-          <QueryDevtools initialIsOpen={false} />
-        </RadixThemeWrapper>
+      {children}
+      <QueryDevtools initialIsOpen={false} />
 
-        <Toaster position="top-right" />
-        
-      </QueryClientProvider>
-    </SessionProvider>
+      <Toaster position="top-right" />
+      
+    </QueryClientProvider>
   );
 };

@@ -56,6 +56,12 @@ function StepPanel({ visible, direction, children }: StepPanelProps) {
 export default function LoginStepManager() {
   const router = useRouter();
   const [step, setStep] = useState<LoginStep>("credentials");
+  const [mountedSteps, setMountedSteps] = useState<Record<LoginStep, boolean>>({
+    credentials: true,
+    "mfa-opt-in": false,
+    "mfa-setup": false,
+    "mfa-otp": false,
+  });
   const [mfaData, setMfaData] = useState<MfaCreateResponse | null>(null);
   /* token efímero recibido en el login cuando el usuario ya tiene MFA activo */
   const [ephemeralToken, setEphemeralToken] = useState<string | null>(null);
@@ -69,6 +75,17 @@ export default function LoginStepManager() {
   const [isCreatingSession, setIsCreatingSession] = useState(false);
 
   const goToStep = (next: LoginStep) => {
+    setMountedSteps((current) => {
+      if (current[next]) {
+        return current;
+      }
+
+      return {
+        ...current,
+        [next]: true,
+      };
+    });
+
     startTransition(() => {
       setStep(next);
     });
@@ -140,28 +157,34 @@ export default function LoginStepManager() {
           />
         </StepPanel>
 
-        <StepPanel visible={step === "mfa-opt-in"} direction="down">
-          <MfaActivationPrompt
-            onMfaCreated={handleMfaCreated}
-            onSkip={handleSkipMfa}
-            isSkipping={isCreatingSession}
-          />
-        </StepPanel>
+        {mountedSteps["mfa-opt-in"] ? (
+          <StepPanel visible={step === "mfa-opt-in"} direction="down">
+            <MfaActivationPrompt
+              onMfaCreated={handleMfaCreated}
+              onSkip={handleSkipMfa}
+              isSkipping={isCreatingSession}
+            />
+          </StepPanel>
+        ) : null}
 
-        <StepPanel visible={step === "mfa-setup"} direction="down">
-          {mfaData && (
-            <MfaQrSetup mfaData={mfaData} onContinue={() => goToStep("mfa-otp")} />
-          )}
-        </StepPanel>
+        {mountedSteps["mfa-setup"] ? (
+          <StepPanel visible={step === "mfa-setup"} direction="down">
+            {mfaData && (
+              <MfaQrSetup mfaData={mfaData} onContinue={() => goToStep("mfa-otp")} />
+            )}
+          </StepPanel>
+        ) : null}
 
-        <StepPanel visible={step === "mfa-otp"} direction="down">
-          <MfaOtpVerify
-            onBack={() => goToStep("mfa-setup")}
-            onSuccess={mfaLoginMode ? undefined : handleMfaConfirmed}
-            mfaAlreadyEnabled={mfaLoginMode}
-            ephemeralToken={ephemeralToken ?? undefined}
-          />
-        </StepPanel>
+        {mountedSteps["mfa-otp"] ? (
+          <StepPanel visible={step === "mfa-otp"} direction="down">
+            <MfaOtpVerify
+              onBack={() => goToStep("mfa-setup")}
+              onSuccess={mfaLoginMode ? undefined : handleMfaConfirmed}
+              mfaAlreadyEnabled={mfaLoginMode}
+              ephemeralToken={ephemeralToken ?? undefined}
+            />
+          </StepPanel>
+        ) : null}
 
       </div>
     </div>

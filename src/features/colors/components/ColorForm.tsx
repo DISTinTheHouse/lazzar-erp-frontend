@@ -1,5 +1,7 @@
 "use client";
 
+import "react-color-palette/css";
+
 import { ColorPicker, useColor, type IColor } from "react-color-palette";
 
 import { FormInput } from "../../../components/FormInput";

@@ -1,5 +1,7 @@
 "use client";
 
+import "@/src/app/styles/fullcalendar.css";
+
 import FullCalendar from "@fullcalendar/react";
 import type { CalendarOptions } from "@fullcalendar/core";
 import { forwardRef, useRef } from "react";

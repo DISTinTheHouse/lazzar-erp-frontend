@@ -28,8 +28,8 @@ export default async function LoginPage() {
           alt="leftSideImage"
           fill
           priority
-          quality={90}
-          sizes="100vw"
+          quality={80}
+          sizes="(min-width: 768px) 50vw, 0px"
           className="object-cover"
         />
       </div>

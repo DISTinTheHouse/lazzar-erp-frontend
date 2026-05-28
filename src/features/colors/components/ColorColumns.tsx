@@ -80,10 +80,10 @@ export const getColumns = (
         <div className="flex items-center gap-2">
           <span
             className="w-3 h-3 rounded-full border border-slate-200 dark:border-slate-600"
-            style={{ backgroundColor: `#${info.getValue()}` }}
+            style={{ backgroundColor: `${info.getValue()}` }}
           />
           <span className="font-mono text-slate-600 dark:text-slate-300">
-            #{info.getValue()}
+            {info.getValue()}
           </span>
         </div>
       ),
