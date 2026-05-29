@@ -39,7 +39,7 @@ export const WorkspaceInfo = () => {
   };
 
   return (
-    <div className="flex min-w-[18rem] items-center gap-3">
+    <div className="flex min-w-[16rem] items-center gap-3">
       {/* Status Indicator */}
       <span className="relative flex h-2.5 w-2.5">
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>

@@ -8,13 +8,15 @@ import MobileSidebar from "./MobileSidebar";
 import { getSidebarItems } from "@/src/utils/getSidebarItems";
 import SidebarItem from "./SidebarItem";
 import { ConfirmDialog } from "./ConfirmDialog";
-import { LogoIcon, LogoutIcon } from "./Icons";
+import { LogoIcon, LogoutIcon, PanelLeftCloseIcon, PanelLeftOpenIcon } from "./Icons";
 import { appRouteGroups } from "@/src/constants/appRoutes";
+import { useSidebar } from "./SidebarProvider";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { handleLogout, isPending: isLoggingOut } = useLogout();
   const { data: session } = useSession();
+  const { isPinned, togglePin } = useSidebar();
   const availableSections = getSidebarItems(session?.user, pathname);
   const activeGroup = appRouteGroups.find(
     (group) => pathname === group.modulePath || pathname.startsWith(`${group.modulePath}/`)
@@ -41,21 +43,64 @@ export default function Sidebar() {
       }
       : null;
 
+  // ─── Clases dependientes del estado de anclaje ──────────────────────────────
+
+  // Ancho del panel interior y del aside
+  const panelWidthClass = isPinned ? "w-72" : "w-20 group-hover/sidebar:w-72";
+
+  // Visibilidad de etiquetas de texto (nombre de marca, labels de items)
+  const labelClass = isPinned
+    ? "opacity-100 transition-opacity duration-200 absolute left-14"
+    : "opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-200 absolute left-14";
+
+  // Visibilidad del nombre de marca en la sección del logo
+  const brandLabelClass = isPinned
+    ? "opacity-100 transition-opacity duration-300 whitespace-nowrap"
+    : "opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300 delay-100 whitespace-nowrap";
+
+  // Visibilidad del label de sección de módulo
+  const sectionLabelClass = isPinned
+    ? "px-3 opacity-100 transition-opacity duration-200"
+    : "px-3 opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-200";
+
+  // Indentación de sub-items del módulo activo
+  const subItemIndentClass = isPinned
+    ? "ml-4 pl-3 border-l border-slate-200/70 dark:border-white/10 space-y-2"
+    : "ml-0 pl-0 border-l-0 group-hover/sidebar:ml-4 group-hover/sidebar:pl-3 group-hover/sidebar:border-l group-hover/sidebar:border-slate-200/70 dark:group-hover/sidebar:border-white/10 space-y-2";
+
+  // Visibilidad del botón de anclaje (solo visible cuando el sidebar está expandido)
+  const pinBtnClass = isPinned
+    ? "opacity-100 text-sky-500 hover:text-sky-600"
+    : "opacity-0 group-hover/sidebar:opacity-100 text-slate-400 hover:text-sky-600 transition-opacity duration-200";
+
   return (
     <>
       {/* SIDEBAR (Desktop) */}
-      <aside className="relative z-40 hidden h-full w-20 shrink-0 overflow-visible md:flex">
-        <div className="group/sidebar relative h-full w-20 shrink-0">
-          <div className="absolute inset-y-0 left-0 flex h-full w-20 flex-col overflow-hidden bg-white/80 backdrop-blur-2xl border-r border-slate-200 shadow-2xl transition-[width] duration-300 ease-in-out dark:bg-black/60 dark:border-white/5 group-hover/sidebar:w-72">
-            {/* Logo Section */}
+      <aside className={`relative z-40 hidden h-full shrink-0 overflow-visible md:flex transition-[width] duration-300 ease-in-out ${isPinned ? "w-72" : "w-20"}`}>
+        <div className={`${isPinned ? "" : "group/sidebar"} relative h-full w-20 shrink-0`}>
+          <div className={`absolute inset-y-0 left-0 flex h-full flex-col overflow-hidden bg-white/80 backdrop-blur-2xl border-r border-slate-200 shadow-2xl transition-[width] duration-300 ease-in-out dark:bg-black/60 dark:border-white/5 ${panelWidthClass}`}>
+            {/* Sección del logo y botón de anclaje */}
             <div className="h-20 flex items-center px-6 shrink-0 overflow-hidden relative border-b border-slate-100 dark:border-slate-800/50">
-              <div className="flex items-center gap-4 min-w-max">
+              <div className="flex items-center gap-4 min-w-max flex-1">
                 <Link href="#" aria-label="Ir al inicio" className="shrink-0 text-sky-600 dark:text-sky-400">
                   <LogoIcon width="32" height="32" className="fill-current opacity-80" aria-hidden="true" />
                 </Link>
-                <span className="brand-font font-bold text-xl tracking-tight opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300 delay-100 whitespace-nowrap">
+                <span className={`brand-font font-bold text-xl tracking-tight ${brandLabelClass}`}>
                   ERP System
                 </span>
+                <button
+                  type="button"
+                  aria-label={isPinned ? "Desanclar barra lateral" : "Anclar barra lateral"}
+                  aria-pressed={isPinned}
+                  onClick={togglePin}
+                  title={isPinned ? "Desanclar" : "Anclar barra lateral"}
+                  className={`ml-auto shrink-0 p-1 rounded-lg transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${pinBtnClass}`}
+                >
+                  {isPinned
+                    ? <PanelLeftCloseIcon className="w-5 h-5" aria-hidden="true" />
+                    : <PanelLeftOpenIcon className="w-5 h-5" aria-hidden="true" />
+                  }
+                </button>
               </div>
             </div>
 
@@ -80,16 +125,16 @@ export default function Sidebar() {
                             }`}
                         >
                           <moduleItem.icon className="w-6 h-6 shrink-0" aria-hidden="true" />
-                          <span className="font-medium text-sm whitespace-nowrap opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-200 absolute left-14">
+                          <span className={`font-medium text-sm whitespace-nowrap ${labelClass}`}>
                             {moduleItem.label}
                           </span>
                         </Link>
-                        <div className="px-3 opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-200">
+                        <div className={sectionLabelClass}>
                           <span className="text-[11px] uppercase tracking-wider font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">
                             {moduleLabel}
                           </span>
                         </div>
-                        <div className="ml-0 pl-0 border-l-0 group-hover/sidebar:ml-4 group-hover/sidebar:pl-3 group-hover/sidebar:border-l group-hover/sidebar:border-slate-200/70 dark:group-hover/sidebar:border-white/10 space-y-2">
+                        <div className={subItemIndentClass}>
                           {section.items
                             .slice(1)
                             .filter((item) => item.href !== moduleItem.href)
@@ -130,7 +175,7 @@ export default function Sidebar() {
                     className="w-full mt-2 flex items-center justify-start gap-4 px-3 py-3 rounded-xl cursor-pointer text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors group relative overflow-hidden disabled:opacity-50 disabled:pointer-events-none"
                   >
                     <LogoutIcon className="w-6 h-6 shrink-0" aria-hidden="true" />
-                    <span className="font-medium text-sm whitespace-nowrap opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-200 absolute left-14">
+                    <span className={`font-medium text-sm whitespace-nowrap ${labelClass}`}>
                       {isLoggingOut ? "Cerrando..." : "Cerrar sesión"}
                     </span>
                   </button>

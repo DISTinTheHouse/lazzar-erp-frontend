@@ -107,6 +107,8 @@ import {
   Route,
   Receipt,
   Printer,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 
 // ─── Tipos comunes ────────────────────────────────────────────────────────────
@@ -121,6 +123,8 @@ export const DashboardIcon = (props: LucideProps) => <LayoutDashboard {...props}
 export const SettingsIcon = (props: LucideProps) => <Settings {...props} />;
 export const LogoutIcon = (props: LucideProps) => <LogOut {...props} />;
 export const MenuIcon = (props: LucideProps) => <Menu {...props} />;
+export const PanelLeftCloseIcon = (props: LucideProps) => <PanelLeftClose {...props} />;
+export const PanelLeftOpenIcon = (props: LucideProps) => <PanelLeftOpen {...props} />;
 export const CloseIcon = (props: LucideProps) => <X {...props} />;
 export const EditIcon = (props: LucideProps) => <Pencil {...props} />;
 export const XIcon = (props: LucideProps) => <X {...props} />;

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { type SidebarItem as SidebarItemType } from "../constants/sidebarItems";
+import { useSidebar } from "./SidebarProvider";
 
 interface SidebarItemProps {
   item: SidebarItemType;
@@ -16,6 +17,7 @@ export default function SidebarItem({
   setIsMobileOpen,
 }: SidebarItemProps) {
   const pathname = usePathname();
+  const { isPinned } = useSidebar();
 
   // Determine if the item is active based on the current path
   // We handle the root path "/" specifically to avoid matching everything
@@ -51,7 +53,7 @@ export default function SidebarItem({
       }`}
     >
       <item.icon className="w-6 h-6 shrink-0" aria-hidden="true" />
-      <span className="font-medium text-sm whitespace-nowrap opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-200 absolute left-14">
+      <span className={`font-medium text-sm whitespace-nowrap transition-opacity duration-200 absolute left-14 ${isPinned ? "opacity-100" : "opacity-0 group-hover/sidebar:opacity-100"}`}>
         {item.label}
       </span>
     </Link>
