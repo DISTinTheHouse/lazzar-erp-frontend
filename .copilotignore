@@ -1,0 +1,12 @@
+# .copilotignore
+node_modules/
+.next/
+dist/
+out/
+build/
+*.log
+.git/
+coverage/
+.vscode/
+*.test.ts
+*.spec.ts
