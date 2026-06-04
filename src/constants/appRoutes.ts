@@ -16,7 +16,6 @@ import {
   OrdenesIcon,
   PedidosIcon,
   RastrearGuiasIcon,
-  RecepcionesIcon,
   ReportesIcon,
   SettingsIcon,
   TasksIcon,
@@ -28,6 +27,7 @@ import {
   ScissorsIcon,
   FactoryIcon,
   ProduccionIcon,
+  RecepcionesIcon,
 } from "../components/Icons";
 
 export interface AppRouteItem {
@@ -147,18 +147,18 @@ export const appRouteGroups: AppRouteGroup[] = [
     showInHome: true,
     items: [
       {
-        key: "wms-inventories",
-        label: "Inventarios",
-        path: "/wms/inventories",
-        icon: InventariosIcon,
-        permission: "R-WMS",
-      },
-      {
         key: "wms-stock",
         label: "Existencias",
         path: "/wms/stock",
         icon: ExistenciasIcon,
         permission: "R-WMS",
+      },
+      {
+        key: "wms-receipts",
+        label: "Recepciones",
+        path: "/wms/receipts",
+        icon: RecepcionesIcon,
+        permission: "R-WMS"
       },
       {
         key: "wms-shipments",
@@ -216,13 +216,6 @@ export const appRouteGroups: AppRouteGroup[] = [
         path: "/procurement/pq-orders",
         icon: PedidosIcon,
         description: "Seguimiento de pedidos de quincena vinculados a órdenes de compra: desde la generación hasta el surtido.",
-        permission: "R-COMPRAS",
-      },
-      {
-        key: "procurement-receipts",
-        label: "Recepciones",
-        path: "/procurement/receipts",
-        icon: RecepcionesIcon,
         permission: "R-COMPRAS",
       },
     ],
