@@ -343,13 +343,12 @@ export function DataTable<TData, TValue>({
             {onRefetch && (
               <Button
                 variant="secondary"
+                size="icon"
                 onClick={() => onRefetch()}
                 disabled={isRefetching}
-                leftIcon={<SyncIcon className={`w-4 h-4 shrink-0 ${isRefetching ? "animate-spin" : ""}`} />}
-                className="shrink-0"
                 aria-label="Actualizar datos"
               >
-                Sincronizar
+                <SyncIcon className={`w-4 h-4 shrink-0 ${isRefetching ? "animate-spin" : ""}`} />
               </Button>
             )}
             {hasBaseData && (
