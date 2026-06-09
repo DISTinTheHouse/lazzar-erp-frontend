@@ -59,7 +59,6 @@ import {
   Lock,
   LogOut,
   Mail,
-  Map,
   MapPin,
   Menu,
   MinusCircle,
@@ -198,7 +197,6 @@ export const BancosIcon = (props: LucideProps) => <Landmark {...props} />;
 export const ContabilidadIcon = (props: LucideProps) => <Calculator {...props} />;
 export const ExistenciasIcon = (props: LucideProps) => <ClipboardList {...props} />;
 export const ListaPreciosIcon = (props: LucideProps) => <DollarSign {...props} />;
-export const RastrearGuiasIcon = (props: LucideProps) => <Map {...props} />;
 export const ClientesIcon = (props: LucideProps) => <Users {...props} />;
 export const EmbarquesIcon = (props: LucideProps) => <Truck {...props} />;
 export const ReportesIcon = (props: LucideProps) => <BarChart2 {...props} />;
