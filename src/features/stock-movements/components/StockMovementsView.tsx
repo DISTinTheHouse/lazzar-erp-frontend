@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import {
   ClockIcon,
   ErrorIcon,
@@ -38,7 +38,7 @@ function sumMutations(item: StockMovement): number {
 
 // ─── KPIs ────────────────────────────────────────────────────────────────────
 
-function MovementsStats({ items }: { items: StockMovement[] }) {
+const MovementsStats = memo(function MovementsStats({ items }: { items: StockMovement[] }) {
   const hoy = useMemo(
     () => items.filter((i) => isToday(i.fecha_movimiento)),
     [items],
@@ -60,56 +60,62 @@ function MovementsStats({ items }: { items: StockMovement[] }) {
     return Math.round((okCount / items.length) * 100);
   }, [items, discrepancies]);
 
-  const formattedVolumen =
-    volumenTotal >= 1_000
-      ? `${(volumenTotal / 1_000).toFixed(1)}k`
-      : volumenTotal.toLocaleString("es-MX");
+  const formattedVolumen = useMemo(
+    () =>
+      volumenTotal >= 1_000
+        ? `${(volumenTotal / 1_000).toFixed(1)}k`
+        : volumenTotal.toLocaleString("es-MX"),
+    [volumenTotal],
+  );
 
-  const kpis: KpiItem[] = [
-    {
-      label: "Transacciones Hoy",
-      value: hoy.length.toLocaleString("es-MX"),
-      icon: ClockIcon,
-      iconBgClass: "bg-sky-50 dark:bg-sky-500/10",
-      iconClass: "text-sky-500",
-      trendLabel: `${items.length > 0 ? Math.round((hoy.length / items.length) * 100) : 0}% del total`,
-      status: "positive",
-      progress: items.length > 0 ? Math.round((hoy.length / items.length) * 100) : 0,
-    },
-    {
-      label: "Discrepancias Críticas",
-      value: discrepancies.length.toLocaleString("es-MX"),
-      icon: ErrorIcon,
-      iconBgClass: "bg-red-50 dark:bg-red-500/10",
-      iconClass: "text-red-500",
-      trendLabel: `${items.length > 0 ? Math.round((discrepancies.length / items.length) * 100) : 0}% del total`,
-      status: discrepancies.length > 0 ? "negative" : "positive",
-      progress: items.length > 0 ? Math.round((discrepancies.length / items.length) * 100) : 0,
-    },
-    {
-      label: "Volumen de Tela (m)",
-      value: formattedVolumen,
-      icon: InventariosIcon,
-      iconBgClass: "bg-amber-50 dark:bg-amber-500/10",
-      iconClass: "text-amber-500",
-      trendLabel: `${items.length} transacciones`,
-      status: "neutral",
-      progress: 100,
-    },
-    {
-      label: "Precisión Auditoría",
-      value: `${precision}%`,
-      icon: CheckCircleIcon,
-      iconBgClass: "bg-emerald-50 dark:bg-emerald-500/10",
-      iconClass: "text-emerald-500",
-      trendLabel: `${items.length - discrepancies.length} de ${items.length} sin incidencias`,
-      status: precision >= 95 ? "positive" : precision >= 80 ? "neutral" : "negative",
-      progress: precision,
-    },
-  ];
+  const kpis = useMemo<KpiItem[]>(
+    () => [
+      {
+        label: "Transacciones Hoy",
+        value: hoy.length.toLocaleString("es-MX"),
+        icon: ClockIcon,
+        iconBgClass: "bg-sky-50 dark:bg-sky-500/10",
+        iconClass: "text-sky-500",
+        trendLabel: `${items.length > 0 ? Math.round((hoy.length / items.length) * 100) : 0}% del total`,
+        status: "positive",
+        progress: items.length > 0 ? Math.round((hoy.length / items.length) * 100) : 0,
+      },
+      {
+        label: "Discrepancias Críticas",
+        value: discrepancies.length.toLocaleString("es-MX"),
+        icon: ErrorIcon,
+        iconBgClass: "bg-red-50 dark:bg-red-500/10",
+        iconClass: "text-red-500",
+        trendLabel: `${items.length > 0 ? Math.round((discrepancies.length / items.length) * 100) : 0}% del total`,
+        status: discrepancies.length > 0 ? "negative" : "positive",
+        progress: items.length > 0 ? Math.round((discrepancies.length / items.length) * 100) : 0,
+      },
+      {
+        label: "Volumen de Tela (m)",
+        value: formattedVolumen,
+        icon: InventariosIcon,
+        iconBgClass: "bg-amber-50 dark:bg-amber-500/10",
+        iconClass: "text-amber-500",
+        trendLabel: `${items.length} transacciones`,
+        status: "neutral",
+        progress: 100,
+      },
+      {
+        label: "Precisión Auditoría",
+        value: `${precision}%`,
+        icon: CheckCircleIcon,
+        iconBgClass: "bg-emerald-50 dark:bg-emerald-500/10",
+        iconClass: "text-emerald-500",
+        trendLabel: `${items.length - discrepancies.length} de ${items.length} sin incidencias`,
+        status: precision >= 95 ? "positive" : precision >= 80 ? "neutral" : "negative",
+        progress: precision,
+      },
+    ],
+    [hoy, discrepancies, items.length, formattedVolumen, precision],
+  );
 
   return <KpiGrid items={kpis} />;
-}
+});
 
 // ─── Vista principal ─────────────────────────────────────────────────────────
 
@@ -161,7 +167,7 @@ export function StockMovementsView() {
         searchPlaceholder="Buscar por tipo, folio, origen o destino..."
         actionButton={<StockMovementForm />}
         filterConfig={stockMovementsFilterConfig}
-        onRefetch={async () => { await refetch(); }}
+        onRefetch={refetch}
         isRefetching={isFetching}
       />
     </div>

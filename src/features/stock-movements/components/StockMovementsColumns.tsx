@@ -9,6 +9,15 @@ import type { StockMovement } from "../interfaces/stock-movements.interface";
 
 export type MovementType = "ENTRADA" | "SALIDA" | "TRASPASO" | "AJUSTE";
 
+// ─── Constantes de acciones (evita recrear en cada render de celda) ────────
+
+const MOVEMENT_ACTION_ITEMS: ActionMenuItem[] = [
+  {
+    label: "Ver Detalles",
+    icon: ViewIcon,
+  },
+];
+
 // ─── Configuración de estilos por tipo de movimiento ────────────────────────
 
 export const MOVEMENT_TYPE_CONFIG: Record<
@@ -263,16 +272,9 @@ export function getStockMovementsColumns() {
       size: 90,
       meta: { label: "Acciones" } as const,
       cell: () => {
-        const actionItems: ActionMenuItem[] = [
-          {
-            label: "Ver Detalles",
-            icon: ViewIcon,
-          },
-        ];
-
         return (
           <div className="flex items-center justify-center">
-            <ActionMenu items={actionItems} ariaLabel="Acciones de movimiento" />
+            <ActionMenu items={MOVEMENT_ACTION_ITEMS} ariaLabel="Acciones de movimiento" />
           </div>
         );
       },
