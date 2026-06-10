@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, lazy, Suspense } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useIsMutating } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
@@ -9,8 +9,6 @@ import { quoteColumns } from "./QuoteColumns";
 import { useQuoteCsvExport } from "../hooks/useQuoteCsvExport";
 import { useQuotePdfExport } from "../hooks/useQuotePdfExport";
 import { Quote } from "../interfaces/quote.interface";
-import { useQuoteFilters } from "../hooks/useQuoteFilters";
-import { QuoteFiltersValue, useQuoteFiltersStore } from "../stores/quote-filters.store";
 import { LoadingSkeleton } from "@/src/components/LoadingSkeleton";
 import { useQuotes } from "../hooks/useQuotes";
 import { approveOperationsQuoteMutationKey } from "../../operations/hooks/useApproveOperationsQuote";
@@ -18,15 +16,9 @@ import { rejectOperationsQuoteMutationKey } from "../../operations/hooks/useReje
 import { hasPermission } from "@/src/utils/permissions";
 import { validateQuoteForReviewMutationKey } from "../hooks/useValidateQuoteForReview";
 
-const QuoteFiltersDialog = lazy(() =>
-  import("./QuoteFiltersDialog").then((mod) => ({ default: mod.QuoteFiltersDialog }))
-);
-
 export const QuoteList = () => {
-  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const { data: session, status: sessionStatus } = useSession();
   const { quotes, isLoading: isOrdersLoading } = useQuotes();
-  const filtersHydrated = useQuoteFiltersStore((state) => state.hasHydrated);
   const [visibleOrders, setVisibleOrders] = useState<Quote[]>([]);
   const [visibleColumns, setVisibleColumns] = useState<DataTableVisibleColumn<Quote>[]>([]);
   const isAuthorizingOrder =
@@ -39,30 +31,11 @@ export const QuoteList = () => {
   const isTableBusy = isUpdatingOrderStatus || isValidatingReview;
   const isSessionLoading = sessionStatus === "loading";
   const canCreateOrder = hasPermission("R-CRM", session?.user);
-  const baseOrders = quotes;
-  const {
-    filters,
-    filteredOrders,
-    hasActiveFilters,
-    applyFilters,
-    clearFilters,
-    savedFilters,
-    saveFilters,
-    clearSavedFilters,
-    personaPagosOptions,
-  } = useQuoteFilters(baseOrders);
 
   useQuoteCsvExport(visibleOrders, visibleColumns);
   useQuotePdfExport(visibleOrders, visibleColumns);
-  const handleApplyFilters = (value: QuoteFiltersValue) => {
-    applyFilters(value);
-    setIsFiltersOpen(false);
-  };
-  const handleClearFilters = () => {
-    clearFilters();
-  };
 
-  if (isOrdersLoading || !filtersHydrated) {
+  if (isOrdersLoading) {
     return (
       <div
         className="mt-12 min-h-165"
@@ -79,12 +52,9 @@ export const QuoteList = () => {
     <div className="mt-12 min-h-165">
       <DataTable
         columns={quoteColumns}
-        data={filteredOrders}
-        baseDataCount={baseOrders.length}
+        data={quotes}
+        baseDataCount={quotes.length}
         searchPlaceholder="Buscar cotización..."
-        onFiltersClick={() => setIsFiltersOpen(true)}
-        isFiltersActive={hasActiveFilters}
-        onClearFilters={handleClearFilters}
         onVisibleRowsChange={setVisibleOrders}
         onVisibleColumnsChange={setVisibleColumns}
         isLoadingOverlay={isTableBusy}
@@ -118,20 +88,6 @@ export const QuoteList = () => {
           ) : null
         }
       />
-      <Suspense fallback={null}>
-        {isFiltersOpen && (
-          <QuoteFiltersDialog
-            open={isFiltersOpen}
-            onOpenChange={setIsFiltersOpen}
-            value={filters}
-            onApply={handleApplyFilters}
-            onSave={saveFilters}
-            onClearSaved={clearSavedFilters}
-            savedValue={savedFilters}
-            personaPagosOptions={personaPagosOptions}
-          />
-        )}
-      </Suspense>
     </div>
   );
 };

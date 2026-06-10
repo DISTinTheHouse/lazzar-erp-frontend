@@ -26,7 +26,6 @@ import {
   SyncIcon,
 } from "./Icons";
 import { Button } from "./Button";
-import { FiltersButton } from "./FiltersButton";
 import { Loader } from "./Loader";
 
 export type DataTableVisibleColumn<TData> = {
@@ -43,9 +42,6 @@ interface DataTableProps<TData, TValue> {
   title?: string;
   searchPlaceholder?: string;
   actionButton?: React.ReactNode;
-  onFiltersClick?: () => void;
-  isFiltersActive?: boolean;
-  onClearFilters?: () => void;
   onRefetch?: () => void | Promise<unknown>;
   isRefetching?: boolean;
   onVisibleRowsChange?: (rows: TData[]) => void;
@@ -62,9 +58,6 @@ export function DataTable<TData, TValue>({
   title,
   searchPlaceholder = "Buscar...",
   actionButton,
-  onFiltersClick,
-  isFiltersActive,
-  onClearFilters,
   onRefetch,
   isRefetching,
   onVisibleRowsChange,
@@ -353,14 +346,6 @@ export function DataTable<TData, TValue>({
             )}
             {hasBaseData && (
               <>
-                {onFiltersClick && (
-                  <FiltersButton
-                    onFiltersClick={onFiltersClick}
-                    isFiltersActive={isFiltersActive}
-                    onClearFilters={onClearFilters}
-                    iconOnly
-                  />
-                )}
                 <div className="relative">
                   <Button
                     variant="secondary"

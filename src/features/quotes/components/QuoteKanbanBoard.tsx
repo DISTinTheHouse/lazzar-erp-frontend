@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useTransition, useCallback, useRef, useEffect, lazy, Suspense } from "react";
+import { useState, useMemo, useTransition, useCallback, useRef, useEffect } from "react";
 import Link from "next/link";
 import { DragDropProvider, DragOverlay } from "@dnd-kit/react";
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/dom";
@@ -8,11 +8,9 @@ import { useIsMutating } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { Loader } from "@/src/components/Loader";
 import { useQuotes } from "../hooks/useQuotes";
-import { useQuoteFilters } from "../hooks/useQuoteFilters";
 import { useSubmitQuoteForReview } from "../hooks/useSubmitQuoteForReview";
 import { validateQuoteForReviewMutationKey } from "../hooks/useValidateQuoteForReview";
 import { useQuoteReviewValidationFlow } from "../hooks/useQuoteReviewValidationFlow";
-import { useQuoteFiltersStore, QuoteFiltersValue } from "../stores/quote-filters.store";
 import { Quote } from "../interfaces/quote.interface";
 import { LoadingSkeleton } from "@/src/components/LoadingSkeleton";
 import { KanbanToolbar } from "@/src/components/KanbanToolbar";
@@ -22,11 +20,6 @@ import { KANBAN_COLUMNS, KanbanColumnConfig } from "../constants/kanbanColumns";
 import { QuoteKanbanCard } from "./QuoteKanbanCard";
 import { QuoteReviewValidationDialog } from "./QuoteReviewValidationDialog";
 import { hasPermission } from "@/src/utils/permissions";
-
-// ─── Carga diferida del diálogo de filtros ────────────────────────────────────
-const QuoteFiltersDialog = lazy(() =>
-  import("./QuoteFiltersDialog").then((mod) => ({ default: mod.QuoteFiltersDialog }))
-);
 
 // ─── Tipos locales ────────────────────────────────────────────────────────────
 type ColumnMap = Record<number, Quote[]>;
@@ -52,20 +45,6 @@ function buildColumnMap(quotes: Quote[]): ColumnMap {
 export function QuoteKanbanBoard() {
   const { quotes, isLoading } = useQuotes();
   const { data: session } = useSession();
-  const filtersHydrated = useQuoteFiltersStore((state) => state.hasHydrated);
-
-  // ─── Filtros del store (misma lógica que QuoteList) ───────────────────────
-  const {
-    filters,
-    filteredOrders,
-    hasActiveFilters,
-    applyFilters,
-    clearFilters,
-    savedFilters,
-    saveFilters,
-    clearSavedFilters,
-    personaPagosOptions,
-  } = useQuoteFilters(quotes);
 
   // ─── Mutación de envío a revisión ────────────────────────────────────────
   const submitQuoteForReviewMutation = useSubmitQuoteForReview();
@@ -86,7 +65,6 @@ export function QuoteKanbanBoard() {
   const [pendingDrop, setPendingDrop] = useState<PendingDrop | null>(null);
   const [returningId, setReturningId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [, startTransition] = useTransition();
 
   // Refs para controlar el diálogo de confirmación sin race conditions
@@ -109,13 +87,7 @@ export function QuoteKanbanBoard() {
   // Permisos
   const canCreateOrder = hasPermission("R-CRM", session?.user);
 
-  // ─── IDs filtrados por el store (fuente de verdad para filtros avanzados) ──
-  const filteredIds = useMemo(
-    () => new Set(filteredOrders.map((q) => q.id)),
-    [filteredOrders]
-  );
-
-  // ─── Mapa de columnas resuelto: DnD + filtros + búsqueda ─────────────────
+  // ─── Mapa de columnas resuelto: DnD + búsqueda ───────────────────────────
   const resolvedMap = useMemo<ColumnMap>(() => {
     // Base: posiciones DnD si existen, si no las del servidor
     const base = columnMap ?? buildColumnMap(quotes);
@@ -125,38 +97,21 @@ export function QuoteKanbanBoard() {
     for (const [key, cards] of Object.entries(base)) {
       result[Number(key)] = cards.filter(
         (c) =>
-          filteredIds.has(c.id) &&
-          (!q ||
-            c.cliente_nombre?.toLowerCase().includes(q) ||
-            c.cliente_razon_social?.toLowerCase().includes(q) ||
-            String(c.id).includes(q) ||
-            (c.oc?.toLowerCase().includes(q) ?? false))
+          !q ||
+          c.cliente_nombre?.toLowerCase().includes(q) ||
+          c.cliente_razon_social?.toLowerCase().includes(q) ||
+          String(c.id).includes(q) ||
+          (c.oc?.toLowerCase().includes(q) ?? false)
       );
     }
     return result;
-  }, [columnMap, quotes, filteredIds, searchQuery]);
+  }, [columnMap, quotes, searchQuery]);
 
   // ─── Total visible (sumando todas las columnas ya filtradas) ──────────────
   const visibleTotal = useMemo(
     () => Object.values(resolvedMap).reduce((acc, col) => acc + col.length, 0),
     [resolvedMap]
   );
-
-  // ─── Handlers de filtros ──────────────────────────────────────────────────
-  const handleApplyFilters = useCallback(
-    (value: QuoteFiltersValue) => {
-      applyFilters(value);
-      // Reinicia posiciones DnD para que reflejen los nuevos filtros
-      setColumnMap(null);
-      setIsFiltersOpen(false);
-    },
-    [applyFilters]
-  );
-
-  const handleClearFilters = useCallback(() => {
-    clearFilters();
-    setColumnMap(null);
-  }, [clearFilters]);
 
   // ─── Handler: inicio de arrastre ─────────────────────────────────────────
   const handleDragStart = useCallback(
@@ -281,7 +236,7 @@ export function QuoteKanbanBoard() {
   );
 
   // ─── Estado de carga ───────────────────────────────────────────────────────
-  if (isLoading || !filtersHydrated) {
+  if (isLoading) {
     return (
       <div className="flex flex-col gap-4 mt-6">
         <div className="h-10 w-full max-w-sm rounded-xl bg-slate-200/70 dark:bg-white/5 animate-pulse" />
@@ -310,9 +265,6 @@ export function QuoteKanbanBoard() {
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
         searchPlaceholder="Buscar cotización..."
-        onFiltersClick={() => setIsFiltersOpen(true)}
-        isFiltersActive={hasActiveFilters}
-        onClearFilters={handleClearFilters}
         actionButton={
           canCreateOrder ? (
             <Link
@@ -333,7 +285,7 @@ export function QuoteKanbanBoard() {
             {visibleTotal}
           </span>{" "}
           {visibleTotal === 1 ? "cotización" : "cotizaciones"}
-          {(hasActiveFilters || searchQuery) && (
+          {searchQuery && (
             <span className="text-slate-400 dark:text-slate-500">
               {" "}de{" "}
               <span className="font-medium text-slate-600 dark:text-slate-400">
@@ -416,21 +368,6 @@ export function QuoteKanbanBoard() {
         errors={reviewValidationErrors}
       />
 
-      {/* Diálogo de filtros (carga diferida) */}
-      <Suspense fallback={null}>
-        {isFiltersOpen && (
-          <QuoteFiltersDialog
-            open={isFiltersOpen}
-            onOpenChange={setIsFiltersOpen}
-            value={filters}
-            onApply={handleApplyFilters}
-            onSave={saveFilters}
-            onClearSaved={clearSavedFilters}
-            savedValue={savedFilters}
-            personaPagosOptions={personaPagosOptions}
-          />
-        )}
-      </Suspense>
     </div>
   );
 }
