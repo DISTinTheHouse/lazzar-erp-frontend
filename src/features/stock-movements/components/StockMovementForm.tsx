@@ -11,6 +11,7 @@ import { Loader } from "@/src/components/Loader";
 import MissingPrerequisites from "@/src/features/products/components/MissingPrerequisites";
 import { InventariosIcon } from "@/src/components/Icons";
 import { Button } from "@/src/components/Button";
+import { ProductVariantSearchDropdown } from "./ProductVariantSearchDropdown";
 import { useStockMovementForm } from "../hooks/useStockMovementForm";
 
 /**
@@ -26,7 +27,8 @@ function StockMovementFormContent({ onClose }: { onClose: () => void }) {
     missingItems,
     warehouseOptions,
     activeLocations,
-    variantOptions,
+    productVariants,
+    resetCounter,
     movimientoTypeOptions,
     availableStock,
     isCheckingStock,
@@ -215,32 +217,19 @@ function StockMovementFormContent({ onClose }: { onClose: () => void }) {
                 <form.Field name="producto_variante_id">
                   {(field) => (
                     <div className="space-y-2">
-                      <FormSelect
-                        label="Variante de Producto"
-                        name={field.name}
+                      <ProductVariantSearchDropdown
+                        key={resetCounter}
+                        variants={productVariants.filter((v) => v.activo)}
                         value={field.state.value}
-                        onChange={(event) => {
-                          const nextValue = Number(event.target.value);
-                          field.handleChange(Number.isNaN(nextValue) ? 0 : nextValue);
+                        onChange={(variantId) => {
+                          field.handleChange(variantId);
                           clearFieldError("producto_variante_id");
                           resetStockCheck();
                         }}
                         onBlur={field.handleBlur}
                         error={getError("producto_variante_id")}
-                      >
-                        <option value="0" disabled>
-                          Seleccionar variante...
-                        </option>
-                        {variantOptions.map((opt) => (
-                          <option
-                            key={opt.value}
-                            value={opt.value}
-                            className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-white"
-                          >
-                            {opt.label}
-                          </option>
-                        ))}
-                      </FormSelect>
+                        disabled={isPending}
+                      />
 
                       <div className="flex items-center gap-3 flex-nowrap">
                         <button

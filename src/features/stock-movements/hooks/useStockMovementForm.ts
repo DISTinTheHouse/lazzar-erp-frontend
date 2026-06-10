@@ -34,6 +34,7 @@ export function useStockMovementForm({ onSuccess }: { onSuccess?: () => void } =
   // ─── Estados de UI ──────────────────────────────────────────────────────
   const [errors, setErrors] = useState<Partial<Record<StockMovementField, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [resetCounter, setResetCounter] = useState(0);
 
   // Ref para evitar doble envío mientras se procesa la mutación.
   const submitInFlight = useRef(false);
@@ -232,6 +233,7 @@ export function useStockMovementForm({ onSuccess }: { onSuccess?: () => void } =
   const handleReset = () => {
     form.reset(defaultValues);
     setErrors({});
+    setResetCounter((prev) => prev + 1);
   };
 
   return {
@@ -242,11 +244,13 @@ export function useStockMovementForm({ onSuccess }: { onSuccess?: () => void } =
     warehouseOptions,
     activeLocations,
     variantOptions,
+    productVariants,
     movimientoTypeOptions,
     availableStock,
     isCheckingStock,
     handleCheckStock,
     resetStockCheck,
+    resetCounter,
     getError,
     clearFieldError,
     handleFormSubmit,
