@@ -1,5 +1,4 @@
-import { PurchaseOrderStats } from "@/src/features/purchase-orders/components/PurchaseOrderStats";
-import { PurchaseOrderList } from "@/src/features/purchase-orders/components/PurchaseOrderList";
+import { PurchaseOrderView } from "@/src/features/purchase-orders/components/PurchaseOrderView";
 
 export default function PurchaseOrdersPage() {
   return (
@@ -10,11 +9,7 @@ export default function PurchaseOrdersPage() {
         </p>
       </div>
 
-      <PurchaseOrderStats />
-
-      <div className="space-y-6">
-        <PurchaseOrderList />
-      </div>
+      <PurchaseOrderView />
     </div>
   );
 }

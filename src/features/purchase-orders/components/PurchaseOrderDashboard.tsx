@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import type { PurchaseOrderMock } from "../mocks/purchase-orders.mock";
+import type { PurchaseOrder } from "../interfaces/purchase-order.interface";
 import type { PurchaseOrderLifecycleStatus } from "../interfaces/purchase-order.interface";
 import {
   ComprasIcon,
@@ -208,19 +208,22 @@ function PipelineCard({
 }
 
 /** Fila de orden crítica en la tabla inferior */
-function CriticalOrderRow({ order }: { order: PurchaseOrderMock }) {
-  const cfg = LIFECYCLE_CFG[order.lifecycle_status];
+function CriticalOrderRow({ order }: { order: PurchaseOrder }) {
+  const lifecycleStatus = order.lifecycle_status;
+  const cfg = lifecycleStatus ? LIFECYCLE_CFG[lifecycleStatus] : null;
 
   return (
     <div className="flex items-center gap-3 py-2.5 border-b border-slate-100 dark:border-white/5 last:border-0">
-      <span className={`w-2 h-2 rounded-full shrink-0 ${cfg.dotColor}`} aria-hidden="true" />
+      {cfg && (
+        <span className={`w-2 h-2 rounded-full shrink-0 ${cfg.dotColor}`} aria-hidden="true" />
+      )}
 
       <div className="flex-1 min-w-0">
         <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 font-mono">
           {order.folio}
         </p>
         <p className="text-[11px] text-slate-400 truncate">
-          {order.proveedor_nombre}
+          {order.proveedor_nombre ?? `Proveedor #${order.proveedor}`}
         </p>
       </div>
 
@@ -233,11 +236,13 @@ function CriticalOrderRow({ order }: { order: PurchaseOrderMock }) {
         </div>
       )}
 
-      <span
-        className={`hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold ${cfg.badgeBg} ${cfg.badgeText}`}
-      >
-        {cfg.shortLabel}
-      </span>
+      {cfg && (
+        <span
+          className={`hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold ${cfg.badgeBg} ${cfg.badgeText}`}
+        >
+          {cfg.shortLabel}
+        </span>
+      )}
     </div>
   );
 }
@@ -282,11 +287,11 @@ function ValueBar({
 // ─── Componente principal ─────────────────────────────────────────────────────
 
 interface PurchaseOrderDashboardProps {
-  orders: PurchaseOrderMock[];
+  orders: PurchaseOrder[];
 }
 
 export function PurchaseOrderDashboard({ orders }: PurchaseOrderDashboardProps) {
-  // Agregaciones derivadas del mock
+  // Agregaciones derivadas de los datos
   const stats = useMemo(() => {
     const byStatus = new Map<PurchaseOrderLifecycleStatus, { count: number; value: number }>();
 
@@ -294,6 +299,7 @@ export function PurchaseOrderDashboard({ orders }: PurchaseOrderDashboardProps) 
 
     orders.forEach((o) => {
       const s = o.lifecycle_status;
+      if (!s) return;
       const entry = byStatus.get(s)!;
       entry.count += 1;
       entry.value += Number(o.total);
@@ -305,7 +311,7 @@ export function PurchaseOrderDashboard({ orders }: PurchaseOrderDashboardProps) 
     // Órdenes críticas: en aduana o en camino al almacén
     const critical = orders
       .filter((o) =>
-        ["en_aduana", "en_camino_almacen", "en_transito"].includes(o.lifecycle_status),
+        ["en_aduana", "en_camino_almacen", "en_transito"].includes(o.lifecycle_status as string),
       )
       .sort((a, b) => {
         // Ordenar por ETA ascendente
@@ -590,7 +596,8 @@ export function PurchaseOrderDashboard({ orders }: PurchaseOrderDashboardProps) 
           </div>
           <div className="space-y-1">
             {stats.topByValue.map((order, idx) => {
-              const cfg = LIFECYCLE_CFG[order.lifecycle_status];
+              const lifecycleStatus = order.lifecycle_status;
+              const cfg = lifecycleStatus ? LIFECYCLE_CFG[lifecycleStatus] : null;
               const pct =
                 stats.topByValue[0]
                   ? (Number(order.total) / Number(stats.topByValue[0].total)) * 100
@@ -608,21 +615,23 @@ export function PurchaseOrderDashboard({ orders }: PurchaseOrderDashboardProps) 
                       <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 font-mono">
                         {order.folio}
                       </span>
-                      <span
-                        className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold ${cfg.badgeBg} ${cfg.badgeText}`}
-                      >
-                        <span className={`w-1 h-1 rounded-full ${cfg.dotColor}`} />
-                        {cfg.shortLabel}
-                      </span>
+                      {cfg && (
+                        <span
+                          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold ${cfg.badgeBg} ${cfg.badgeText}`}
+                        >
+                          <span className={`w-1 h-1 rounded-full ${cfg.dotColor}`} />
+                          {cfg.shortLabel}
+                        </span>
+                      )}
                     </div>
-                    <div className={`h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden ${cfg.iconText}`}>
+                    <div className={`h-1 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden ${cfg ? cfg.iconText : 'text-slate-400'}`}>
                       <div
                         className="h-full bg-current rounded-full"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
                     <p className="text-[10px] text-slate-400 mt-0.5 truncate">
-                      {order.proveedor_nombre}
+                      {order.proveedor_nombre ?? `Proveedor #${order.proveedor}`}
                     </p>
                   </div>
                   {/* Valor */}
