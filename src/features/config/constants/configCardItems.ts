@@ -24,7 +24,8 @@ import {
   SatUnitCodesIcon,
   ProductIcon,
   ProductVariantsIcon,
-  FolioIcon
+  FolioIcon,
+  EmbarquesIcon,
 } from "@/src/components/Icons";
 import { getSatInfo } from "../../sat/services/actions";
 import { getTaxes } from "../../taxes/services/actions";
@@ -34,6 +35,7 @@ import { getSatUnitCodes } from "../../sat-unit-codes/services/actions";
 import { getProducts } from "../../products/services/actions";
 import { getProductVariants } from "../../product-variants/services/actions";
 import { getSerieFolios } from "../../series-folios/services/actions";
+import { getSuppliers } from "../../suppliers/services/actions";
 
 
 interface ConfigCardItem {
@@ -149,6 +151,16 @@ export const configCards: ConfigCardItem[] = [
     view: "locations",
     group: "Organización",
     adminOnly: true,
+  },
+  {
+    title: "Proveedores",
+    description: "Gestión de proveedores y cuentas por pagar",
+    icon: EmbarquesIcon,
+    view: "suppliers",
+    group: "Organización",
+    adminOnly: true,
+    prefetchKey: ["suppliers"],
+    prefetchFn: getSuppliers,
   },
   {
     title: "Monedas",
