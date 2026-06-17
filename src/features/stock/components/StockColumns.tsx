@@ -43,89 +43,6 @@ export const STATUS_CONFIG: Record<
   critical: { label: "Crítico", dot: "bg-red-500 animate-pulse",   textClass: "text-red-600 dark:text-red-400",         pillActive: "bg-red-500 text-white shadow-red-500/30"         },
 };
 
-// ─── Componente: Anillo de stock (SVG donut) ──────────────────────────────────
-// Mantenido para cuando se reactive la columna "Stock" (actualmente comentada).
-
-// interface StockRingProps {
-//   stock: number;
-//   maxStock: number;
-//   status: StockStatus;
-// }
-
-/** Anillo donut SVG que muestra el nivel de stock respecto al máximo del conjunto. */
-// function StockRing({ stock, maxStock, status }: StockRingProps) {
-//   const SIZE = 78;
-//   const R    = 29;
-//   const SW   = 7;
-//   const C    = 2 * Math.PI * R;
-//   const CX   = SIZE / 2;
-//   const CY   = SIZE / 2;
-
-//   const pctStock = maxStock > 0 ? Math.min(stock / maxStock, 1) : 0;
-//   const stockLen = C * pctStock;
-//   const percentage = Math.round(pctStock * 100);
-
-//   const centerFillClass: Record<StockStatus, string> = {
-//     full:     "fill-emerald-500",
-//     ok:       "fill-sky-500",
-//     low:      "fill-amber-500",
-//     critical: "fill-red-500",
-//   };
-
-//   return (
-//     <div className="flex flex-col items-center gap-1">
-//       <svg
-//         width={SIZE}
-//         height={SIZE}
-//         viewBox={`0 0 ${SIZE} ${SIZE}`}
-//         aria-hidden="true"
-//         role="img"
-//       >
-//         {/* Pista de fondo */}
-//         <circle
-//           cx={CX}
-//           cy={CY}
-//           r={R}
-//           fill="none"
-//           strokeWidth={SW}
-//           className="stroke-slate-100 dark:stroke-white/10"
-//         />
-
-//         {/* Arco: nivel de stock */}
-//         {pctStock > 0.005 && (
-//           <circle
-//             cx={CX}
-//             cy={CY}
-//             r={R}
-//             fill="none"
-//             strokeWidth={SW}
-//             stroke="#0ea5e9"
-//             strokeDasharray={`${stockLen} ${C}`}
-//             strokeLinecap="butt"
-//             style={{
-//               transform: "rotate(-90deg)",
-//               transformOrigin: `${CX}px ${CY}px`,
-//             }}
-//           />
-//         )}
-
-//         {/* Porcentaje central */}
-//         <text
-//           x={CX}
-//           y={CY + 1}
-//           textAnchor="middle"
-//           dominantBaseline="middle"
-//           fontSize={12}
-//           fontWeight={700}
-//           className={centerFillClass[status]}
-//         >
-//           {percentage}%
-//         </text>
-//       </svg>
-//     </div>
-//   );
-// }
-
 // ─── Componente: celda de acciones ────────────────────────────────────────────
 
 function ActionsCell({ stock }: { stock: StockItem }) {
@@ -170,24 +87,29 @@ export function getStockColumns(maxStock?: number) {
 
   return [
     columnHelper.accessor(
-      (row) => row.producto_info.sku ?? "",
+      (row) => row.producto_info.sku,
       {
         id: "sku",
         header: "SKU",
         meta: { label: "SKU" } as const,
-        cell: (info) => (
-          <span className="text-xs font-mono font-semibold text-slate-500 dark:text-slate-400 tracking-wider">
-            {info.getValue()}
-          </span>
-        ),
+        cell: (info) => {
+          const sku = info.getValue();
+          return sku ? (
+            <span className="text-xs font-mono font-semibold text-slate-500 dark:text-slate-400 tracking-wider">
+              {sku}
+            </span>
+          ) : (
+            <span className="text-xs text-slate-400 dark:text-slate-600">—</span>
+          );
+        },
       }
     ),
     columnHelper.accessor(
       (row) => row.producto_info.nombre ?? "",
       {
-        id: "descripcion",
-        header: "Descripción",
-        meta: { label: "Descripción" } as const,
+        id: "producto",
+        header: "Producto",
+        meta: { label: "Producto" } as const,
         cell: (info) => (
           <span className="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-snug line-clamp-2">
             {info.getValue()}
@@ -196,16 +118,22 @@ export function getStockColumns(maxStock?: number) {
       }
     ),
     columnHelper.accessor(
-      (row) => row.producto_info.categoria_producto,
+      (row) => row.producto_info.tipo,
       {
-        id: "categoria",
-        header: "Categoría",
-        meta: { label: "Categoría" } as const,
+        id: "tipo",
+        header: "Tipo",
+        meta: { label: "Tipo" } as const,
         cell: (info) => {
-          const catId = info.getValue();
+          const tipo = info.getValue();
+          if (!tipo) return <span className="text-xs text-slate-400">—</span>;
+          const colors: Record<string, string> = {
+            MP: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400",
+            PT: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400",
+            PP: "bg-sky-100 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400",
+          };
           return (
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full leading-none bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-300">
-              {catId != null ? `Cat. ${catId}` : "—"}
+            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full leading-none ${colors[tipo] ?? "bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-300"}`}>
+              {tipo}
             </span>
           );
         },
@@ -237,46 +165,19 @@ export function getStockColumns(maxStock?: number) {
         },
       }
     ),
-    // columnHelper.accessor(
-    //   (row) => row.almacen_info,
-    //   {
-    //     id: "almacen",
-    //     header: "Almacén",
-    //     meta: { label: "Almacén" } as const,
-    //     cell: (info) => {
-    //       const wh = info.getValue();
-    //       return (
-    //         <div className="min-w-0">
-    //           <span className="text-[10px] font-medium px-2 py-0.5 rounded-full leading-none bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-900/20 dark:text-sky-300 dark:border-sky-800/50">
-    //             {wh.codigo ?? "—"}
-    //           </span>
-    //           <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1">
-    //             <BuildingIcon className="w-3 h-3 shrink-0 text-slate-400" />
-    //             <span className="truncate">{wh.nombre ?? "—"}</span>
-    //           </p>
-    //         </div>
-    //       );
-    //     },
-    //   }
-    // ),
-    // columnHelper.accessor(
-      //   (row) => row.stock,
-      //   {
-        //     id: "stock",
-        //     header: "Stock",
-        //     meta: { label: "Stock" } as const,
-        //     enableSorting: true,
-        //     sortingFn: "basic",
-        //     cell: (info) => {
-          //       const stock = info.getValue();
-          //       const item = info.row.original;
-          //       const status = getStockStatus(stock, effectiveMax);
-          //       return (
-            //         <StockRing stock={stock} maxStock={effectiveMax} status={status} />
-            //       );
-            //     },
-            //   }
-            // ),
+    columnHelper.accessor(
+      (row) => row.almacen_info?.nombre ?? "",
+      {
+        id: "almacen",
+        header: "Almacén",
+        meta: { label: "Almacén" } as const,
+        cell: (info) => (
+          <span className="text-xs text-slate-600 dark:text-slate-300">
+            {info.getValue()}
+          </span>
+        ),
+      }
+    ),
     columnHelper.accessor(
       (row) => row.stock,
       {
@@ -286,31 +187,71 @@ export function getStockColumns(maxStock?: number) {
         sortingFn: "basic",
         cell: (info) => {
           const stock = info.getValue();
-          const unidad = info.row.original.producto_info.unidad_medida?.toString() ?? "uds";
+          const cantidad = info.row.original.cantidad;
           return (
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full shrink-0 bg-sky-500" />
               <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
                 {stock.toLocaleString("es-MX")}
               </span>
-              <span className="text-[10px] text-slate-400 dark:text-slate-500">{unidad}</span>
+              {cantidad && (
+                <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                  ({Number(cantidad).toFixed(2)})
+                </span>
+              )}
             </div>
           );
         },
       }
     ),
     columnHelper.accessor(
-      (row) => row.ubicacion_info.nombre_completo ?? "",
+      (row) => row.fecha_actualizacion,
+      {
+        id: "actualizacion",
+        header: "Última actualización",
+        meta: { label: "Última actualización" } as const,
+        cell: (info) => {
+          const raw = info.getValue();
+          if (!raw) return <span className="text-xs text-slate-400">—</span>;
+          try {
+            const date = new Date(raw);
+            const formatted = date.toLocaleDateString("es-MX", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+            return (
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                {formatted}
+              </span>
+            );
+          } catch {
+            return <span className="text-xs text-slate-400">{raw}</span>;
+          }
+        },
+      }
+    ),
+    columnHelper.accessor(
+      (row) => row.ubicacion_info?.nombre_completo,
       {
         id: "ubicacion",
         header: "Ubicación",
+        size: 300,
         meta: { label: "Ubicación" } as const,
-        cell: (info) => (
-          <div className="flex items-start gap-1 text-[11px] text-slate-400 dark:text-slate-500">
-            <MapPinIcon className="w-3 h-3 shrink-0 mt-0.5" />
-            <span className="line-clamp-2">{info.getValue()}</span>
-          </div>
-        ),
+        cell: (info) => {
+          const ubicacion = info.getValue();
+          if (!ubicacion) {
+            return <span className="text-xs text-slate-400 dark:text-slate-500">—</span>;
+          }
+          return (
+            <div className="flex items-start gap-1 text-[11px] text-slate-400 dark:text-slate-500">
+              <MapPinIcon className="w-3 h-3 shrink-0 mt-0.5" />
+              <span className="line-clamp-2">{ubicacion}</span>
+            </div>
+          );
+        },
       }
     ),
     columnHelper.display({
@@ -331,12 +272,12 @@ export function getStockColumns(maxStock?: number) {
         );
       },
     }),
-    columnHelper.display({
-      id: "actions",
-      header: () => <div className="text-center">Acciones</div>,
-      size: 90,
-      cell: ({ row }) => <ActionsCell stock={row.original} />,
-    }),
+    // columnHelper.display({
+    //   id: "actions",
+    //   header: () => <div className="text-center">Acciones</div>,
+    //   size: 90,
+    //   cell: ({ row }) => <ActionsCell stock={row.original} />,
+    // }),
   ] as ColumnDef<StockItem>[];
 }
 

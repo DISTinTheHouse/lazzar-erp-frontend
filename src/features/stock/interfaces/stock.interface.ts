@@ -7,6 +7,7 @@ export interface ProductoInfo {
   nombre: string | null;
   descripcion: string | null;
   tipo: string | null;
+  tipo_id: number;
   categoria_producto: number | null;
   unidad_medida: number | null;
   sku: string | null;
@@ -44,11 +45,17 @@ export interface StockItem {
   id: number;
   producto_info: ProductoInfo;
   almacen_info: AlmacenInfo;
-  ubicacion_info: UbicacionInfo;
+  ubicacion_info: UbicacionInfo | null;
   lote_info: Record<string, unknown> | null;
   serie_info: Record<string, unknown> | null;
   stock: number;
-  producto_variante: number;
+  /** Representación string de la cantidad (incluye decimales). */
+  cantidad: string;
+  /** Fecha y hora de la última actualización ISO 8601. */
+  fecha_actualizacion: string;
+  /** ID del producto base. */
+  producto: number;
+  producto_variante: number | null;
   almacen: number;
-  ubicacion: number;
+  ubicacion: number | null;
 }
