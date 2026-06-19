@@ -5,15 +5,25 @@ import { Provider } from "./Provider";
 
 
 
+// Inter es la fuente del cuerpo (texto base): se precarga porque se usa
+// inmediatamente above-the-fold en todas las rutas.
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
+// Poppins es la fuente secundaria (solo títulos/brand-font). Se desactiva el
+// preload para no competir con la descarga del recurso LCP: el navegador la
+// carga al usarse y, gracias al fallback ajustado por métricas (size-adjust),
+// el texto se pinta de inmediato sin FOIT ni desplazamiento de layout (CLS).
+// Evita precargar 5 pesos de fuente que en muchas rutas no se usan above-the-fold.
 const poppins = Poppins({
   variable: "--font-poppins",
   weight: ["300", "400", "500", "600", "700"],
   subsets: ["latin"],
+  display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {

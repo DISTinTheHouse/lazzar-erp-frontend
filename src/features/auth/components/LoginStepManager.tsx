@@ -2,13 +2,37 @@
 
 import { startTransition, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { signIn } from "next-auth/react";
 import toast from "react-hot-toast";
 import LoginForm from "./LoginForm";
-import MfaActivationPrompt from "./MfaActivationPrompt";
-import MfaQrSetup from "./MfaQrSetup";
-import MfaOtpVerify from "./MfaOtpVerify";
 import type { LoginSuccessResponse, MfaCreateResponse, MfaLoginUser } from "../interfaces/auth.interface";
+
+/**
+ * Los pasos de MFA no forman parte de la vista inicial de credenciales: solo
+ * se montan después de un login exitoso. Se cargan de forma diferida con
+ * next/dynamic (ssr: false) para sacarlos —junto con react-qr-code— del bundle
+ * inicial de la ruta /auth/login, reduciendo el JS de hidratación y el First
+ * Load JS sin alterar el comportamiento (siguen gated por `mountedSteps`).
+ */
+const StepLoadingFallback = () => (
+  <div className="flex min-h-108 w-full items-center justify-center" aria-hidden>
+    <span className="h-6 w-6 animate-spin rounded-full border-2 border-sky-500/70 border-t-transparent" />
+  </div>
+);
+
+const MfaActivationPrompt = dynamic(() => import("./MfaActivationPrompt"), {
+  ssr: false,
+  loading: StepLoadingFallback,
+});
+const MfaQrSetup = dynamic(() => import("./MfaQrSetup"), {
+  ssr: false,
+  loading: StepLoadingFallback,
+});
+const MfaOtpVerify = dynamic(() => import("./MfaOtpVerify"), {
+  ssr: false,
+  loading: StepLoadingFallback,
+});
 
 export type LoginStep = "credentials" | "mfa-opt-in" | "mfa-setup" | "mfa-otp";
 
