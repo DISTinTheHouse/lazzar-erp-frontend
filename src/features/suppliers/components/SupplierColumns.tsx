@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ColumnDef, createColumnHelper } from "@tanstack/react-table";
-import { EditIcon, DeleteIcon, ViewIcon } from "@/src/components/Icons";
+import { EditIcon, DeleteIcon } from "@/src/components/Icons";
 import { Supplier } from "../interfaces/supplier.interface";
 import { ActionMenu, ActionMenuItem } from "@/src/components/ActionMenu";
 import { ConfirmDialog } from "@/src/components/ConfirmDialog";
@@ -24,12 +24,7 @@ const ActionsCell = ({
   const { mutate: deleteSupplier, isPending } = useDeleteSupplier();
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
-  const menuItems: ActionMenuItem[] = [
-    {
-      label: "Ver Detalles",
-      icon: ViewIcon,
-    },
-  ];
+  const menuItems: ActionMenuItem[] = [];
 
   if (canEdit) {
     menuItems.push({
