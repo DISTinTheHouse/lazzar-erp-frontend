@@ -2,8 +2,12 @@ import { v1_api } from "@/src/api/v1.api";
 import { Product, ProductCreate } from "../interfaces/product.interface";
 
 
-export const getProducts = async (): Promise<Product[]> => {
-  const response = await v1_api.get<Product[]>("/catalogo/producto/");
+export const getProducts = async (tipo_id?: number | string): Promise<Product[]> => {
+  const response = await v1_api.get<Product[]>("/catalogo/producto/", {
+    params: {
+      ...(tipo_id !== undefined && { tipo_id }),
+    },
+  });
   return response.data;
 };
 

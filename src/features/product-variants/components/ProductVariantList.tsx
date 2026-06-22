@@ -28,7 +28,7 @@ export default function ProductVariantList() {
     error: variantsError,
   } = useProductVariants();
   const { products, isLoading: isLoadingProducts, isError: isErrorProducts, error: productsError } =
-    useProducts();
+    useProducts(3);
   const { colors, isLoading: isLoadingColors, isError: isErrorColors, error: colorsError } =
     useColors();
   const { sizes, isLoading: isLoadingSizes, isError: isErrorSizes, error: sizesError } =

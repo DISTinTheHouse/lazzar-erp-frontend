@@ -23,7 +23,7 @@ export const AddProductDialog = ({
   onOpenChange,
   onAddItem,
 }: AddProductDialogProps) => {
-  const { products = [], isLoading, isError } = useProducts();
+  const { products = [], isLoading, isError } = useProducts(3);
   const [search, setSearch] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [cantidad, setCantidad] = useState(1);

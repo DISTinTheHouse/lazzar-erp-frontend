@@ -28,7 +28,7 @@ export function useProductVariantForm({
   const selectedCompany = useWorkspaceStore((state) => state.selectedCompany);
 
   // Carga catálogos necesarios para construir los selectores.
-  const { products, isLoading: isLoadingProducts } = useProducts();
+  const { products, isLoading: isLoadingProducts } = useProducts(3);
   const { colors, isLoading: isLoadingColors } = useColors();
   const { sizes, isLoading: isLoadingSizes } = useSizes();
 

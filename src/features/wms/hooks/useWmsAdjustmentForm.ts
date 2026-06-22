@@ -25,7 +25,7 @@ export function useWmsAdjustmentForm() {
   // Fuentes de datos para catálogos del formulario y operación de persistencia.
   const addAdjustment = useWmsAdjustmentStore((state) => state.addAdjustment);
   const { data: session } = useSession();
-  const { products = [], isLoading: productsLoading } = useProducts();
+  const { products = [], isLoading: productsLoading } = useProducts(3);
   const { data: locations = [], isLoading: locationsLoading } = useLocations();
 
   // Estado de carga global para mantener el mismo comportamiento de bloqueo visual.

@@ -30,7 +30,7 @@ export function useAddProductsDialog({
   existingProductIds,
   onAddItems,
 }: UseAddProductsDialogParams) {
-  const { products } = useProducts();
+  const { products } = useProducts(3);
   const { units } = useUnitsOfMeasure();
 
   const [search, setSearch] = useState("");

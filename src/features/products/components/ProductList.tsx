@@ -23,7 +23,7 @@ export default function ProductList() {
   const canDeleteConfig = isAdmin || permissions.includes("D-CONFIGURACION");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const { products, isLoading, isError, error } = useProducts();
+  const { products, isLoading, isError, error } = useProducts(3);
 
   const { categories } = useProductCategories();
   const { units } = useUnitsOfMeasure();
