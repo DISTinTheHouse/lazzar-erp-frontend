@@ -27,8 +27,6 @@ import { Quote } from "../interfaces/quote.interface";
 import {
   canEditQuote,
   canManageQuoteAuthorization,
-  canSubmitQuoteForReview,
-  isMuestraQuote,
   isQuoteReviewableStatus,
 } from "../utils/quoteStatusRules";
 import { QuoteReviewValidationDialog } from "./QuoteReviewValidationDialog";
@@ -90,14 +88,6 @@ export function QuoteCardActions({ quote, align = "end" }: QuoteCardActionsProps
 
   // ─── Permisos de acción por estatus ───────────────────────────────────────
   const canEdit = canEditQuote(quote.estatus);
-  const canSendToReview = canSubmitQuoteForReview(quote.estatus, quote.tipo_pedido);
-  /**
-   * Una cotización de muestra ve sus acciones bloqueadas, pero visibles:
-   * ocultarlas no explicaría nada. `ActionMenuItem` no tiene campo de tooltip,
-   * así que el motivo viaja en la etiqueta —igual que el menú ya hace con
-   * "Verificando…".
-   */
-  const isMuestra = isMuestraQuote(quote.tipo_pedido);
   const canManageAuthorization = canManageQuoteAuthorization(quote.estatus);
 
   const handleOpenAuthorizeDialog = () => {
@@ -134,30 +124,19 @@ export function QuoteCardActions({ quote, align = "end" }: QuoteCardActionsProps
       onSelect: () => setIsViewOpen(true),
     },
     {
-      label: isMuestra ? "Editar (no disponible en muestras)" : "Editar",
+      label: "Editar",
       icon: EditIcon,
       onSelect: () => router.push(`/sales/quotes/${quote.id}/edit`),
       // `visible` es la regla de NEGOCIO (estatus editable, ver
       // `canEditQuote`); `permission` es la de PERMISOS — se exigen ambas.
       permission: "E-CRM-COTIZACIONES",
       visible: canEdit,
-      // La edición rehidrata cada partida como si fuera de catálogo, así que una
-      // de muestra caería en la validación de `quoteItemSchema`
-      // (`productoId >= 1`). Se bloquea aquí en vez de fallar al guardar.
-      disabled: isMuestra,
     },
     {
-      label: isMuestra
-        ? "Enviar a revisión (no aplica a muestras)"
-        : isValidatingReview
-          ? "Verificando..."
-          : "Enviar a revisión",
+      label: isValidatingReview ? "Verificando..." : "Enviar a revisión",
       icon: PaperPlaneIcon,
       onSelect: handleSubmitForReviewClick,
-      // El deshabilitado lo decide la REGLA COMPARTIDA, no `isMuestra`: así el
-      // menú y el arrastre del tablero siguen consultando lo mismo. `isMuestra`
-      // solo elige la etiqueta que explica el motivo.
-      disabled: !canSendToReview || isSubmittingForReview || isValidatingReview,
+      disabled: isSubmittingForReview || isValidatingReview,
       visible: isQuoteReviewableStatus(quote.estatus),
     },
     {
