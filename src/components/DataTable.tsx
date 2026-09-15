@@ -12,6 +12,7 @@ import {
   SortingState,
   VisibilityState,
   ColumnOrderState,
+  ColumnFiltersState,
   PaginationState,
 } from "@tanstack/react-table";
 import {
@@ -64,6 +65,12 @@ interface DataTableProps<TData, TValue> {
   baseDataCount?: number;
   title?: string;
   searchPlaceholder?: string;
+  /**
+   * Por defecto (`false`) la búsqueda arranca colapsada detrás del ícono de
+   * lupa, igual que siempre. En `true` se muestra como un input fijo (sin
+   * botón de colapsar) — para listas donde filtrar es la acción principal.
+   */
+  searchAlwaysExpanded?: boolean;
   actionButton?: React.ReactNode;
   filterConfig?: DataTableFilterConfig[];
   onActiveFiltersChange?: (filters: DataTableActiveFilter[]) => void;
@@ -76,6 +83,26 @@ interface DataTableProps<TData, TValue> {
   loadingMessage?: string;
   /** Al cambiar, reinicia la paginación a la página 1 sin afectar sorting, búsqueda, filtros o columnas. */
   paginationResetKey?: string | number;
+  /**
+   * Tamaño de página inicial en modo cliente. Por defecto `10`, igual que
+   * antes de existir esta prop — pásala solo cuando ese consumidor deba
+   * arrancar en otro tamaño (el selector "Filas" sigue permitiendo cambiarlo).
+   */
+  defaultPageSize?: number;
+  /**
+   * Densidad visual de encabezados/filas. `"comfortable"` (por defecto)
+   * conserva el padding y tamaño de fuente de siempre; `"compact"` los reduce
+   * para listas que priorizan ver más filas de un vistazo sin scroll.
+   */
+  density?: "comfortable" | "compact";
+  /**
+   * Por defecto (`false`) la barra de herramientas y la tabla se renderizan
+   * como bloques separados, igual que siempre. En `true` comparten un único
+   * marco (borde/esquinas/sombra), con la barra y el paginador como
+   * secciones separadas por un divisor en vez de flotar con su propio
+   * margen — para listas donde se busca una sensación de panel sólido.
+   */
+  framed?: boolean;
   /** Mensaje del estado vacío dentro del cuerpo de la tabla (cuando no hay datos). */
   emptyMessage?: string;
   /**
@@ -141,6 +168,7 @@ export function DataTable<TData, TValue>({
   baseDataCount,
   title,
   searchPlaceholder = "Buscar...",
+  searchAlwaysExpanded = false,
   actionButton,
   filterConfig,
   onActiveFiltersChange,
@@ -161,6 +189,9 @@ export function DataTable<TData, TValue>({
   onErrorRetry,
   getRowId,
   serverPagination,
+  defaultPageSize = 10,
+  density = "comfortable",
+  framed = false,
 }: DataTableProps<TData, TValue>) {
   const searchInputId = useId();
   const columnsMenuId = `${searchInputId}-columns-menu`;
@@ -170,11 +201,21 @@ export function DataTable<TData, TValue>({
   const [globalFilter, setGlobalFilter] = useState("");
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [columnOrder, setColumnOrder] = useState<ColumnOrderState>([]);
+  // Estado NATIVO de TanStack para filtros por columna (distinto del
+  // mecanismo de chips `activeFilters`/`filterConfig` de abajo). Columnas que
+  // no declaran `filterFn` ni llaman `column.setFilterValue()` nunca lo
+  // pueblan, así que para los 55+ consumidores que no lo usan esto es un
+  // no-op idéntico a no tenerlo — lo consume `getFilteredRowModel` más abajo.
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
-    pageSize: 10,
+    pageSize: defaultPageSize,
   });
-  
+  // Clases derivadas de `density`: un único punto de ternario en vez de
+  // repetirlo en cada className de encabezado/celda.
+  const cellPaddingCls = density === "compact" ? "px-4 py-2.5" : "px-6 py-4";
+  const bodyTextCls = density === "compact" ? "text-[13px]" : "text-sm";
+
   // Reset pagination when paginationResetKey changes
   const previousPaginationResetKeyRef = useRef(paginationResetKey);
   useEffect(() => {
@@ -364,6 +405,7 @@ export function DataTable<TData, TValue>({
     state: {
       sorting,
       globalFilter,
+      columnFilters,
       columnVisibility,
       columnOrder,
       pagination: effectivePagination,
@@ -371,6 +413,7 @@ export function DataTable<TData, TValue>({
     columnResizeMode: "onChange",
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
+    onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     onColumnOrderChange: setColumnOrder,
     onPaginationChange: setPagination,
@@ -549,8 +592,23 @@ export function DataTable<TData, TValue>({
   );
 
   return (
-    <div>
-      <div className={"flex flex-col lg:flex-row lg:items-center " + (title ? "justify-between" : "justify-end") + " gap-4 mb-4"}>
+    <div
+      className={
+        framed
+          ? "rounded-2xl border border-slate-200 dark:border-white/20 shadow-sm bg-white dark:bg-black overflow-hidden"
+          : ""
+      }
+    >
+      <div
+        className={
+          "flex flex-col lg:flex-row lg:items-center " +
+          (title ? "justify-between" : "justify-end") +
+          " gap-4 " +
+          (framed
+            ? "p-4 border-b border-slate-100 dark:border-slate-800"
+            : "mb-4")
+        }
+      >
       {title ? (
         <h1 className="text-xl font-semibold text-slate-800 dark:text-white">
           {title}
@@ -563,7 +621,32 @@ export function DataTable<TData, TValue>({
                 actual (no la consulta completa), haciendo creer que un registro
                 de otra página "no existe". Aún no hay búsqueda server-side para
                 estos reportes. En modo cliente permanece visible como antes. */}
-            {!isServerPaginated && (
+            {!isServerPaginated && searchAlwaysExpanded && (
+              <div className="relative shrink-0">
+                <SearchIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  ref={searchInputRef}
+                  id={searchInputId}
+                  type="search"
+                  value={globalFilter ?? ""}
+                  onChange={(e) => setGlobalFilter(e.target.value)}
+                  placeholder={searchPlaceholder}
+                  aria-label={searchPlaceholder}
+                  className="block w-full sm:w-72 py-1.5 pl-9 pr-9 text-sm leading-5 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500 transition-shadow [&::-webkit-search-cancel-button]:hidden [-moz-appearance:textfield]"
+                />
+                {globalFilter && (
+                  <button
+                    type="button"
+                    onClick={() => setGlobalFilter("")}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
+                    aria-label="Limpiar búsqueda"
+                  >
+                    <CloseIcon className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            )}
+            {!isServerPaginated && !searchAlwaysExpanded && (
             <div className="flex items-center gap-0">
               <button
                 type="button"
@@ -908,33 +991,47 @@ export function DataTable<TData, TValue>({
           consulta del llamador, para que su `actionButton` siga visible durante
           la carga y el error. El estado VACÍO se maneja dentro del `<tbody>`. */}
       {isError ? (
-        onErrorRetry ? (
-          <ErrorDisplay
-            title={errorTitle ?? "Error al cargar los datos"}
-            message={errorMessage}
-            onRetry={onErrorRetry}
-          />
-        ) : (
-          <ErrorState
-            title={errorTitle ?? "Error al cargar los datos"}
-            message={errorMessage}
-          />
-        )
+        <div className={framed ? "p-4" : ""}>
+          {onErrorRetry ? (
+            <ErrorDisplay
+              title={errorTitle ?? "Error al cargar los datos"}
+              message={errorMessage}
+              onRetry={onErrorRetry}
+            />
+          ) : (
+            <ErrorState
+              title={errorTitle ?? "Error al cargar los datos"}
+              message={errorMessage}
+            />
+          )}
+        </div>
       ) : isLoading ? (
-        <div
-          className="min-h-120"
-          role="status"
-          aria-live="polite"
-          aria-label={loadingAriaLabel ?? "Cargando"}
-        >
-          <LoadingSkeleton className="h-120 rounded-2xl" />
+        <div className={framed ? "p-4" : ""}>
+          <div
+            className="min-h-120"
+            role="status"
+            aria-live="polite"
+            aria-label={loadingAriaLabel ?? "Cargando"}
+          >
+            <LoadingSkeleton className="h-120 rounded-2xl" />
+          </div>
         </div>
       ) : (
       /* La cabecera (columnas) permanece visible aunque no haya filas; el
-         mensaje de vacío se muestra dentro del cuerpo de la tabla. */
-      <div className="relative w-full rounded-2xl border border-slate-200 dark:border-white/20 shadow-sm bg-white dark:bg-black">
+         mensaje de vacío se muestra dentro del cuerpo de la tabla. En modo
+         `framed` el marco (borde/esquinas/sombra) ya lo puso el contenedor
+         exterior, así que aquí solo queda el fondo para el blur del overlay. */
+      <div
+        className={
+          framed
+            ? "relative w-full bg-white dark:bg-black"
+            : "relative w-full rounded-2xl border border-slate-200 dark:border-white/20 shadow-sm bg-white dark:bg-black"
+        }
+      >
           <div
-            className={`overflow-x-auto rounded-2xl max-w-full bg-white dark:bg-black transition-all ${
+            className={`overflow-x-auto max-w-full bg-white dark:bg-black transition-all ${
+              framed ? "" : "rounded-2xl"
+            } ${
               visibleRows.length > 0 || isLoadingOverlay ? "h-120" : ""
             } ${
               isLoadingOverlay ? "blur-sm pointer-events-none select-none" : ""
@@ -955,6 +1052,14 @@ export function DataTable<TData, TValue>({
                     // ordenaría las filas de la página actual, dando un "top"
                     // parcial engañoso respecto al conjunto completo.
                     const canSort = !isServerPaginated && header.column.getCanSort();
+                    // Columnas secundarias (p. ej. placeholders sin dato real
+                    // todavía) pueden marcarse `meta: { hideOnMobile: true }`
+                    // para no competir por espacio en pantallas angostas —
+                    // siguen presentes desde `md` en adelante.
+                    const columnMeta = header.column.columnDef.meta as
+                      | { hideOnMobile?: boolean }
+                      | undefined;
+                    const hideOnMobileCls = columnMeta?.hideOnMobile ? "hidden md:table-cell" : "";
                     const sorted = header.column.getIsSorted();
                     const ariaSortValue =
                       sorted === "asc"
@@ -999,7 +1104,7 @@ export function DataTable<TData, TValue>({
                           moveColumn(draggedId, header.column.id);
                         }
                       }}
-                      className={`px-6 py-4 font-semibold transition-colors group/th sticky top-0 z-10 bg-slate-50 dark:bg-zinc-900 ${
+                      className={`${cellPaddingCls} ${hideOnMobileCls} font-semibold transition-colors group/th sticky top-0 z-10 bg-slate-50 dark:bg-zinc-900 ${
                         canSort
                           ? "cursor-pointer select-none hover:text-slate-700 dark:hover:text-slate-300"
                           : ""
@@ -1065,22 +1170,28 @@ export function DataTable<TData, TValue>({
                 </tr>
               ))}
             </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+              <tbody className={`divide-y divide-slate-100 dark:divide-slate-800 ${bodyTextCls}`}>
                 {visibleRows.length > 0 ? (
                   visibleRows.map((row) => (
                     <tr
                       key={row.id}
                       className="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors"
                     >
-                      {row.getVisibleCells().map((cell) => (
-                        <td
-                          key={cell.id}
-                          className="px-6 py-4"
-                          style={{ width: cell.column.getSize() }}
-                        >
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </td>
-                      ))}
+                      {row.getVisibleCells().map((cell) => {
+                        const cellMeta = cell.column.columnDef.meta as
+                          | { hideOnMobile?: boolean }
+                          | undefined;
+                        const hideOnMobileCls = cellMeta?.hideOnMobile ? "hidden md:table-cell" : "";
+                        return (
+                          <td
+                            key={cell.id}
+                            className={`${cellPaddingCls} ${hideOnMobileCls}`}
+                            style={{ width: cell.column.getSize() }}
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </td>
+                        );
+                      })}
                     </tr>
                   ))
                 ) : (
@@ -1113,7 +1224,12 @@ export function DataTable<TData, TValue>({
       )}
 
       {showPager && !isLoading && !isError && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
+        <div
+          className={
+            "flex flex-col sm:flex-row items-center justify-between gap-4 " +
+            (framed ? "p-4 border-t border-slate-100 dark:border-slate-800" : "mt-6")
+          }
+        >
           <div className="text-sm text-slate-500 dark:text-slate-400">
             {isServerPaginated
               ? `Página ${currentPage} de ${pageCount}`
