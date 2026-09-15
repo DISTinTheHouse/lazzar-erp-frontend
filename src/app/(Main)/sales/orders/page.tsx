@@ -9,15 +9,9 @@ export const metadata: Metadata = {
 
 export default function SalesOrdersPage() {
   return (
-    <main className="w-full space-y-8" aria-label="Mis pedidos">
-      <header>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Pedidos originados en las cotizaciones que creaste. Consulta su detalle y
-          estado de confirmación.
-        </p>
-      </header>
+    <main className="w-full" aria-label="Mis pedidos">
       <section aria-label="Lista de pedidos">
-        <OrderListView from="sales" params={{ mis_pedidos: 'true' }} />
+        <OrderListView from="sales" params={{ mis_pedidos: 'true' }} variant="sales" />
       </section>
     </main>
   );
